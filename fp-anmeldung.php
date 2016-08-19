@@ -1,9 +1,13 @@
 <?php
-
+/**
+ * Anmeldungsmaske für das FPraktikum des FB Physik. Die Datei wird über das POInclude plugins
+ * eingebunden (<PO:Include id="fpraktikum">). Dabei wird nur die Funktion htmlReturn() aufgerufen.
+ * August 2016
+ */
 error_reporting(-1);
 
 // ilUser global
-$ilUser;
+//$ilUser;
 
 class fpraktikum
 {
@@ -22,32 +26,34 @@ class fpraktikum
 		$this->user_lastname = $ilUser->getLastname();
 		$this->user_matrikel = $ilUser->getMatriculation();
 
-		// test html-text
-		//$this->html = file_get_contents('./Customizing/global/plugins/Services/UIComponent/UserInterfaceHook/POIncludes/classes/fp-form.html', true);
 		$this->html = "
-		  <small>Dateien liegen in der VM unter local/includes/fpraktikum/</small>
+		  <small>Dateien liegen in der VM unter Customizing/global/include/fpraktikum/</small>
 		  <form action='gibtsnochnicht.php' method='post'>
 		    <p>Folgende Daten werden automatisch mitgeschickt:</p>
-		    
+
 		    <input type='hidden' name='firstname' value='".$this->user_firstname."'>
 		    <input type='hidden' name='lastname' value='".$this->user_lastname."'>
 		    <input type='hidden' name='matrikel' value='".$this->user_matrikel."'>
-		    
+
 		    <p>Name: ".$this->user_firstname." ".$this->user_lastname."</p>
 		    <p>Matrikelnummer: ".$this->user_matrikel."</p><br>
 
-		    <p>Dein Studiengang: 
+		    <p>Dein Studiengang:
 		      <input onchange=institutWahl('bachelor') type='radio' name='studiengang' value='Bachelor'>Bachelor
 		      <input onchange=institutWahl('master') type='radio' name='studiengang' value='Master'>Master
 		    </p>
-		    <br>
-		    <span id='institutWahl'></span>
-		    
-		    Dein Lieblingspartner: <input type='text'><br>
+				<span id='institutWahl'></span>
+        <br>
+        <input onchange=partnerWahl(this) type='checkbox' name='check-partner'>Ich möchte eine Partnerin/einen Partner angeben.</input>
+        <br>
+        <span id='partnerWahl'></span>
+
+
 		    <input class='submit' type='submit'>
 		  </form>";
-		
-		$this->js = file_get_contents('./local/includes/fpraktikum/fp-anmeldung.js');
+
+    // get js script
+		$this->js = file_get_contents('./Customizing/global/include/fpraktikum/fp-anmeldung.js');
 		$this->html .= "<script>".$this->js."</script>";
 	}
 
