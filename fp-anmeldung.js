@@ -36,11 +36,39 @@ function institutWahl(studiengang) {
 function partnerWahl(element) {
   var target = document.getElementById('partnerWahl');
   if (element.checked) {
-    target.innerHTML = "HRZ-Account: <input type='text' name='partner-hrz' placeholder='s1234567'>\
-                        Nachname: <input type='text' name='partner-name'><br>";
+    target.innerHTML = "<div onblur='checkPartner()'>\
+                        HRZ-Account: <input onblur='checkPartner()' id='partner-hrz' type='text' name='partner-hrz' placeholder='s1234567'>\
+                        Nachname: <input id='partner-name' type='text' name='partner-name' placeholder='Müller'><br>\
+                        <span id='partner-correct'></span>\
+                        </div><br>";
   } else {
     target.innerHTML = "";
   }
+}
+
+function checkPartner() {
+  var hrz = document.getElementById('partner-hrz').value;
+  var name = document.getElementById('partner-name').value;
+
+  var httpRequest = new XMLHttpRequest();
+
+  httpRequest.onreadystatechange = function() {
+    try {
+      if (httpRequest.readyState === XMLHttpRequest.DONE) {
+        var response = JSON.parse(httpRequest.responseText);
+        console.log(response);
+
+        document.getElementById('partner-correct').innerHTML =
+          (response == 'Gefunden') ? 'Gefunden!' : 'Nicht gefunden!';
+      };
+    }
+    catch(e) {
+      alert('Es ist ein Fehler beim Abrufen des Partners aufgetreten: ' + e.description);
+    }
+  }
+
+  httpRequest.open('GET', './Customizing/global/include/fpraktikum/fp-dbRequest.php?task=partner&hrz='+hrz+'&name='+name);
+  httpRequest.send();
 }
 
 function freePlaces() {

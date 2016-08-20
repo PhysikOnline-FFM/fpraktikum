@@ -50,11 +50,9 @@ class fpraktikum
 
 
 		    <input class='submit' type='submit'>
-		  </form>";
-
-    // get js script
-		$this->js = file_get_contents('./Customizing/global/include/fpraktikum/fp-anmeldung.js');
-		$this->html .= "<script>".$this->js."</script>";
+		  </form>
+			<script type='text/javascript' src='./Customizing/global/include/fpraktikum/fp-anmeldung.js'></script>
+			";
 	}
 
 	/**

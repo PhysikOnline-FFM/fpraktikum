@@ -16,6 +16,8 @@ switch ($task) {
 
 /**
  * function to determine the free places in each institute
+ * -> DB call to determine institutes
+ *
  * @return [JSON] JSON-Object to be returned to the js-script
  */
 function freePlaces() {
@@ -24,7 +26,17 @@ function freePlaces() {
   echo json_encode($testArray);
 }
 
+/**
+ * function to check whether the hrz-number and name can be found in the ILIAS-DB
+ */
 function partner() {
+  $hrz = $_GET['hrz'];
+  $name = $_GET['name'];
 
+  if ($hrz == 's1234567' && $name == 'Müller')  {
+    echo json_encode('Gefunden');
+  } else {
+    echo 0;
+  }
 }
  ?>
