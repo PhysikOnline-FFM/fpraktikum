@@ -10,7 +10,7 @@ class database
   protected $dbTable;
   protected $db;
 
-  function __construct($dbLink, $dbUser, $dbPassword, $dbTable)
+  public function __construct($dbLink, $dbUser, $dbPassword, $dbTable)
   {
     $this->dbLink = $dbLink;
     $this->dbUser = $dbUser;
@@ -19,24 +19,30 @@ class database
 
   }
 
-  function __destruct()
+  public function __destruct()
   {
-      mysqli_close($this->db);
+      //$this->db->close();
   }
 
-  function initDb()
+  public function initDb()
   {
-    $this->db = mysqli_connect($this->dbLink, $this->dbUser, $this->dbPassword, $this->dbTable)
+    $this->db = new mysqli($this->dbLink, $this->dbUser, $this->dbPassword, $this->dbTable)
     or die("Unable to connect to Database with link ".$this->dbLink."!");
-    mysqli_set_charset($this->db, 'UTF8');
+
+    $this->db->set_charset('UTF8');
   }
 
-  function makeQuery($query)
+  public function makeQuery($query)
   {
     // TODO: Database Security
     //$query = mysqli_real_escape_string($this->db, $query);
 
-    $dbResult = mysqli_query($this->db, $query) or die("Error ".mysqli_error($this->db)."!");
+    $dbResult = $this->db->query($query) or die("Error ".$this->db->error."!");
     return $dbResult;
+  }
+
+  public function prepare($query)
+  {
+    return $this->db->prepare($query);
   }
 }

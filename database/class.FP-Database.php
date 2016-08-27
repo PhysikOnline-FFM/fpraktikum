@@ -1,11 +1,14 @@
 <?php
 
 error_reporting(-1);
+//ini_set('display_errors', 1);
 
 require_once('/home/elearning-www/public_html/elearning/ilias-4.3/Customizing/global/include/fpraktikum/database/class.Database.php');
 
 /**
  * class containing all functions necessary to communicate with the database
+ *
+ * TODO: 
  */
 class FP_Database extends Database
 {
@@ -39,9 +42,17 @@ class FP_Database extends Database
 
   /**
    * function to check whether the hrz-number and name can be found in the ILIAS-DB
+   * @param [string] $hrz the partners hrz-account
+   * @param [string] $name the partners lastname 
    */
-  public function checkPartner($hrz, $name) {
-    if (mysqli_num_rows($this->dbIL->makeQuery("SELECT usr_id FROM ".$this->configIL['tbl-name']." WHERE login='".$hrz."' && lastname='".$name."'")) != 0) {
+  public function checkPartner($hrz, $name) {    
+    $stmt = $this->dbIL->prepare("SELECT usr_id FROM ".$this->configIL['tbl-name']." WHERE login=? && lastname=?");
+    $stmt->bind_param("ss", $hrz, $name);
+
+    $stmt->execute();
+    $stmt->bind_result($usr_id);
+
+    if ($stmt->fetch()) {
        return true;
     } else {
       return false;
@@ -50,32 +61,97 @@ class FP_Database extends Database
 
   /**
    * function to check whether the logged-in user is already registered/a partner or not
-   * TODO
+   * TODO was passiert wenn ein Nutzer angemeldet und ein partner ist?
    */
-  public function checkUser($user_matrikel, $user_login) {
-    if (mysqli_num_rows($this->dbFP->makeQuery("SELECT hrz FROM ".$this->configFP['tbl-anmeldung']." WHERE matrikelnummer='".$user_matrikel."'")) == 1) {
+  public function checkUser($user_matrikel, $user_login, $semester) {
+
+    $stmt_angemeldet = $this->dbFP->prepare("SELECT hrz FROM ".$this->configFP['tbl-anmeldung']." 
+      WHERE matrikelnummer=? && semester=?");
+    $stmt_partner = $this->dbFP->prepare("SELECT hrz FROM ".$this->configFP['tbl-anmeldung']." 
+      WHERE partner=? && semester=?");
+
+    $stmt_angemeldet->bind_param("ss", $user_matrikel, $semester);
+    $stmt_partner->bind_param("ss", $user_login, $semester);
+
+    $stmt_angemeldet->execute();
+    $stmt_partner->execute();
+
+    $stmt_angemeldet->bind_result($hrz);
+    $stmt_partner->bind_result($hrz);
+
+    if ($stmt_angemeldet->fetch()) {
         return "angemeldet";
-      } else if (mysqli_num_rows($this->dbFP->makeQuery("SELECT hrz FROM ".$this->configFP['tbl-anmeldung']." WHERE partner='".$user_login."'")) == 1) {
+      } else if ($stmt_partner->fetch()) {
         return "partner";
       } else {
         return false;
       }
   }
 
-  public function neueAnmeldung($data, $partner_db, $semester)
-  {
-    $db_data = implode("', '", array_values($data));
+  /**
+   * function to add a new registration to the db
+   * @param  [array] $data       information given by the user
+   * @param  [string|null] $partner_db the hrz of the partner or NULL
+   */
+  public function neueAnmeldung($data, $partner_db)
+  {    
+    
     if ($partner_db == NULL) {
-      echo "INSERT INTO ".$this->configFP['tbl-anmeldung']." 
-        VALUES('".$db_data."', '".$semester."', NULL, NOW())<br>";
-      $this->dbFP->makeQuery("INSERT INTO ".$this->configFP['tbl-anmeldung']." 
-        VALUES('".$db_data."', '".$semester."', NULL, NOW())");
+      $stmt = $this->dbFP->prepare("INSERT INTO ".$this->configFP['tbl-anmeldung']." 
+        VALUES(?, ?, ?, ?, ?, NULL, NOW())");
+      $stmt->bind_param("sssss", $data['hrz'], $data['name'], $data['matrikel'], 
+        $data['studiengang'], $data['semester']);
     } else {
-      echo "INSERT INTO ".$this->configFP['tbl-anmeldung']." 
-        VALUES('".$db_data."', '".$semester."', '".$partner_db."', NOW())<br>";
-      $this->dbFP->makeQuery("INSERT INTO ".$this->configFP['tbl-anmeldung']." 
-        VALUES('".$db_data."', '".$semester."', '".$partner_db."', NOW())");
+      $stmt = $this->dbFP->prepare("INSERT INTO ".$this->configFP['tbl-anmeldung']." 
+        VALUES(?, ?, ?, ?, ?, ?, NOW())");
+      $stmt->bind_param("sssss", $data['hrz'], $data['name'], $data['matrikel'], 
+        $data['studiengang'], $data['semester'], $partner_db);
     }
+
+    return $stmt->execute();
+  }
+
+  /**
+   * function to get data about a user
+   * @param  [stinrg] $hrz
+   * @param  [string] $semester
+   * @return [array]           information found
+   */
+  public function anmeldeDaten($hrz, $semester)
+  {
+
+    $stmt = $this->dbFP->prepare("SELECT name, matrikelnummer, abschluss, partner, datum
+     FROM ".$this->configFP['tbl-anmeldung']." WHERE hrz=? && semester=?");
+
+    $stmt->bind_param("ss", $hrz, $semester);
+    $stmt->execute();
+    $stmt->bind_result($name, $matrikel, $abschluss, $partner, $datum);
+
+    if ($stmt->fetch()) {
+      return array('name' => $name,
+        'matrikel' => $matrikel,
+        'abschluss' => $abschluss,
+        'partner' => $partner,
+        'datum' => $datum
+        );
+    } else {
+      die('Fehler beim Abfragen der Anmeldedaten!');
+    }
+  }
+
+  /**
+   * function to delete the registration of one user
+   * TODO: Partner
+   * @param  [array] $data 
+   * @return [bool]
+   */
+  public function rmAnmeldung($data)
+  {
+    $stmt = $this->dbFP->prepare("DELETE FROM ".$this->configFP['tbl-anmeldung']." 
+      WHERE hrz=? && matrikelnummer=? && semester=?");
+
+    $stmt->bind_param("sss", $data['hrz'], $data['matrikel'], $data['semester']);
+    return $stmt->execute();
   }
 
 }

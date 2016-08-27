@@ -12,9 +12,32 @@ $data = [
   "hrz" => $_POST['hrz'],
   "name" => $_POST['firstname']." ".$_POST['lastname'],
   "matrikel" => $_POST['matrikel'],
-  "studiengang" =>$_POST['studiengang']  
+  "studiengang" => $_POST['studiengang'],
+  "semester" => $_POST['semester']
 ];
 
+// get partner
+$partner = false;
+if ($_POST['check-partner']) {
+  $check_partner = $_POST['check-partner'];
+
+  if ($check_partner == "on") {
+    $partner = true;
+    $partner_hrz = $_POST['partner-hrz'];
+    $partner_name = $_POST['partner-name'];
+  }
+  if ($check_partner != "on" && ($_POST['partner-hrz'] != "" && $_POST['partner-name'] != "")) {
+    $error = "Etwas ist bei der Partnerwahl falsch, bitte gehe wieder zum ".$Anmeldeformular." zurück";
+  }
+}
+
+// institutes TODO
+
+//// checks ////
+
+$error = [];
+
+// are all fields filled?
 foreach ($data as $name => $value) {
   if (!$value) {
     echo '<h1>Bitte rufe diese Seite nur über das '.$Anmeldeformular.' auf.</h1>';
@@ -24,49 +47,35 @@ foreach ($data as $name => $value) {
 
 require '/home/elearning-www/public_html/elearning/ilias-4.3/Customizing/global/include/fpraktikum/database/class.FP-Database.php';
 
-$error = "";
 
-// get partner
-$partner = false;
-if ($_POST['check-partner']) {
-  $check_partner = $_POST['check-partner'];
-
-  if ($check_partner == "on") {
-    $partner = true;
-  	$partner_hrz = $_POST['partner-hrz'];
-  	$partner_name = $_POST['partner-name'];
-  }
-  if ($check_partner != "on" && ($_POST['partner-hrz'] != "" && $_POST['partner-name'] != "")) {
-    $error = "Etwas ist bei der Partnerwahl falsch, bitte gehe wieder zum ".$Anmeldeformular." zurück";
-  }
-}
-// institutes TODO
 
 $fp_database = new FP_Database();
 
 
 // check user input again
-if ($fp_database->checkUser($data['matrikel'], $data['hrz']) != false) {
-	$error = "Du bist bereits angemeldet oder wurdest als Partner von jemandem anderen hinzugefügt, bitte gehe wieder zum ".$Anmeldeformular." zurück";
+if ($fp_database->checkUser($data['matrikel'], $data['hrz'], $data['semester']) != false) {
+	array_push($error, "Du bist bereits angemeldet oder wurdest als Partner von jemandem anderen hinzugefügt, bitte gehe wieder zum ".$Anmeldeformular." zurück");
 }
 if ($partner) {
   if (!$fp_database->checkPartner($partner_hrz, $partner_name)) {
-    $error = "Dein angebener Partner ist nicht in der Datenbank, bitte gehe wieder zum ".$Anmeldeformular." zurück";
+    array_push($error, "Dein angebener Partner ist nicht in der Datenbank, bitte gehe wieder zum ".$Anmeldeformular." zurück");
   }
 }
-// more checks
+// more checks, e.g. regex checks for entries and check whether info is in il-db
 
-if ($error != "") {
-  echo '<h1>'.$error.'</h1>';
+if ($error != []) {
+  foreach ($error as $key => $text) {
+    echo '<h1>'.$error[$key].'</h1><br>';
+  }  
   exit ();
 }
 
-// should be determined automatically
-$semester = 'WS16/17';
-
 // it should be save now to access the db
 $partner_db = ($partner) ? $partner_hrz : NULL;
-$fp_database->neueAnmeldung($data, $partner_db, $semester);
+
+if (!$fp_database->neueAnmeldung($data, $partner_db)) {
+  die('Error beim Speichern deiner Daten');
+}
 
 ?>
-Deine Daten wurden erfolgreich gespeichert!
+<br>Deine Daten wurden erfolgreich gespeichert!<br>
