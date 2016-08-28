@@ -42,8 +42,8 @@ switch ($fp_database->checkUser($user_matrikel, $user_login, $semester)) {
         <p>semester: ".$semester."<br>
 
         <p>Dein Studiengang:
-        <input onchange=institutWahl('bachelor') type='radio' name='studiengang' value='Bachelor'>Bachelor
-        <input onchange=institutWahl('master') type='radio' name='studiengang' value='Master'>Master
+        <input onchange=institutWahl('BA') type='radio' name='abschluss' value='BA'>Bachelor
+        <input onchange=institutWahl('MA') type='radio' name='abschluss' value='MA'>Master
         </p>
         <span id='institut-wahl'></span>
         <br>
@@ -58,7 +58,7 @@ switch ($fp_database->checkUser($user_matrikel, $user_login, $semester)) {
     ";
     break;
   case "angemeldet":
-    $data = $fp_database->anmeldeDaten($user_login, $semester);
+    $data = $fp_database->getAnmeldung($user_login, $semester);
     $html = "
       Du bist bereits angemeldet. Dies sind die Informationen, die in der Datenbank gespeichert sind:<br>
       Name: ".$data['name']."<br>
@@ -68,8 +68,8 @@ switch ($fp_database->checkUser($user_matrikel, $user_login, $semester)) {
       Partner-hrz: ".$data['partner']."<br>
       Datum: ".$data['datum']."<br><br>
 
-      1.Semesterhälfte: <br>
-      2.Semesterhälfte: <br>
+      1.Semesterhälfte: ".$data['institut1']."<br>
+      2.Semesterhälfte: ".$data['institut2']."<br>
 
       Hier kannst du dich wieder abmelden:<br>
       <form action='/Customizing/global/include/fpraktikum/fp-abmeldung.php' method='post'>

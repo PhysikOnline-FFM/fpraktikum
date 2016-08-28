@@ -43,6 +43,10 @@ class database
 
   public function prepare($query)
   {
-    return $this->db->prepare($query);
+    $stmt = $this->db->prepare($query);
+    if (!$stmt) {
+      die("Error ".$this->db->error);
+    }
+    return $stmt; 
   }
 }

@@ -12,8 +12,10 @@ $data = [
   "hrz" => $_POST['hrz'],
   "name" => $_POST['firstname']." ".$_POST['lastname'],
   "matrikel" => $_POST['matrikel'],
-  "studiengang" => $_POST['studiengang'],
-  "semester" => $_POST['semester']
+  "abschluss" => $_POST['abschluss'],
+  "semester" => $_POST['semester'],
+  "institut1" => $_POST['institut1'],
+  "institut2" => $_POST['institut2']
 ];
 
 // get partner
@@ -31,7 +33,6 @@ if ($_POST['check-partner']) {
   }
 }
 
-// institutes TODO
 
 //// checks ////
 
@@ -61,7 +62,7 @@ if ($partner) {
     array_push($error, "Dein angebener Partner ist nicht in der Datenbank, bitte gehe wieder zum ".$Anmeldeformular." zurück");
   }
 }
-// more checks, e.g. regex checks for entries and check whether info is in il-db
+// more checks, e.g. regex checks for entries and check whether info is in il-db and whether there are free places in requested institute
 
 if ($error != []) {
   foreach ($error as $key => $text) {
@@ -73,7 +74,7 @@ if ($error != []) {
 // it should be save now to access the db
 $partner_db = ($partner) ? $partner_hrz : NULL;
 
-if (!$fp_database->neueAnmeldung($data, $partner_db)) {
+if (!$fp_database->setAnmeldung($data, $partner_db)) {
   die('Error beim Speichern deiner Daten');
 }
 
