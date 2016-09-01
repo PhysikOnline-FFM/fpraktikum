@@ -1,7 +1,9 @@
 <?php
 
 /**
- * script that is called after user clicked submit
+ * script checks input from user and writes registration to db
+ * TODO: mehr checks siehe unten
+ * August 2016 - LG
  */
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -10,29 +12,14 @@ $Anmeldeformular = '<a href="http://4-3.ilias.physikelearning.de/ilias.php?ref_i
 
 $data = [
   "hrz" => $_POST['hrz'],
-  "name" => $_POST['firstname']." ".$_POST['lastname'],
+  "firstname" => $_POST['firstname'],
+  "lastname" => $_POST['lastname'],
   "matrikel" => $_POST['matrikel'],
   "abschluss" => $_POST['abschluss'],
   "semester" => $_POST['semester'],
   "institut1" => $_POST['institut1'],
   "institut2" => $_POST['institut2']
 ];
-
-// get partner
-$partner = false;
-if ($_POST['check-partner']) {
-  $check_partner = $_POST['check-partner'];
-
-  if ($check_partner == "on") {
-    $partner = true;
-    $partner_hrz = $_POST['partner-hrz'];
-    $partner_name = $_POST['partner-name'];
-  }
-  if ($check_partner != "on" && ($_POST['partner-hrz'] != "" && $_POST['partner-name'] != "")) {
-    $error = "Etwas ist bei der Partnerwahl falsch, bitte gehe wieder zum ".$Anmeldeformular." zurück";
-  }
-}
-
 
 //// checks ////
 
@@ -49,18 +36,15 @@ foreach ($data as $name => $value) {
 require '/home/elearning-www/public_html/elearning/ilias-4.3/Customizing/global/include/fpraktikum/database/class.FP-Database.php';
 
 
-
 $fp_database = new FP_Database();
 
 
 // check user input again
-if ($fp_database->checkUser($data['matrikel'], $data['hrz'], $data['semester']) != false) {
-	array_push($error, "Du bist bereits angemeldet oder wurdest als Partner von jemandem anderen hinzugefügt, bitte gehe wieder zum ".$Anmeldeformular." zurück");
+if ($fp_database->checkUser($data['matrikel'], $data['hrz'], $data['semester'])[0] != 'partner') {
+	array_push($error, "Du bist bereits angemeldet oder wurdest nicht als Partner hinzugefügt, bitte gehe wieder zum ".$Anmeldeformular." zurück");
 }
-if ($partner) {
-  if (!$fp_database->checkPartner($partner_hrz, $partner_name)) {
-    array_push($error, "Dein angebener Partner ist nicht in der Datenbank, bitte gehe wieder zum ".$Anmeldeformular." zurück");
-  }
+if ($fp_database->checkUserInfo($data)) {
+
 }
 // more checks, e.g. regex checks for entries and check whether info is in il-db and whether there are free places in requested institute
 

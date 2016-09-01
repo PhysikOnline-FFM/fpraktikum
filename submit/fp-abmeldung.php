@@ -1,7 +1,7 @@
 <?php
 
 /**
- * script that is called after user wants to delet registration
+ * script that is called after user wants to delete registration
  */
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
@@ -10,8 +10,7 @@ $Anmeldeformular = '<a href="http://4-3.ilias.physikelearning.de/ilias.php?ref_i
 
 $data = [
   "hrz" => $_POST['hrz'],
-  "matrikel" => $_POST['matrikel'],
-  "semester" => $_POST['semester']
+  "graduation" => $_POST['graduation']
 ];
 
 foreach ($data as $name => $value) {
@@ -31,7 +30,7 @@ $fp_database = new FP_Database();
 
 
 // check user input again
-if ($fp_database->checkUser($data['matrikel'], $data['hrz'], $data['semester']) == false) {
+if ($fp_database->checkUser($data['hrz'], $data['graduation']) == false) {
   $error = "Du bist nicht angemeldet und kannst dich nicht abmelden, bitte gehe wieder zum ".$Anmeldeformular." zurück";
 }
 
@@ -45,7 +44,7 @@ if ($error != "") {
 // it should be save now to access the db
 
 if ($fp_database->rmAnmeldung($data)) {
-  echo "<br>Deine Daten wurden erfolgreich ggelöscht!<br>";
+  echo "<br>Deine Daten wurden erfolgreich gelöscht!<br>";
 } else {
   echo "<br>Deine Daten konnten nicht gelöscht werden!<br>";
 }

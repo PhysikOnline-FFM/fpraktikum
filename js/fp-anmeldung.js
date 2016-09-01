@@ -8,9 +8,14 @@
  */
 console.log('script is loaded');
 
-function institutWahl(studiengang) {
+var semester = 'WS16/17';
+
+/**
+ * display free instituts and corresponding places left
+ */
+function showInstitut(studiengang) {
   
-  var target = document.getElementById('institut-wahl');  
+  var target = document.getElementById('instituts');  
 
   var httpRequest = new XMLHttpRequest();
 
@@ -24,27 +29,28 @@ function institutWahl(studiengang) {
 
         var data = response[studiengang];
 
+        // build form
         for (var institut in data) {
-          if (data[institut]['1']) {
-            text_haelfte1 += "<input type='radio' name='institut1' value='"+institut+"'>\
-              "+institut+" - Frei: "+data[institut]['1']+"</span><br>";
+          if (data[institut]['0']) {
+            text_haelfte1 += "<input onchange=disableInstitutWahl('"+institut+"2') type='radio' name='institute1' value='"+institut+"' id='"+institut+"1'>\
+              "+institut+" - Frei: "+data[institut]['0']+"</span><br>";
           }
-          if (data[institut]['2']) {
-            text_haelfte2 += "<input type='radio' name='institut2' value='"+institut+"'>\
-              "+institut+" - Frei: "+data[institut]['2']+"</span><br>";
+          if (data[institut]['1']) {
+            text_haelfte2 += "<input <input onchange=disableInstitutWahl('"+institut+"1') type='radio' name='institute2' value='"+institut+"' id='"+institut+"2'>\
+              "+institut+" - Frei: "+data[institut]['1']+"</span><br>";
           }          
         }
 
-        target.innerHTML = "1. Semesterhälfte:<br>"+text_haelfte1
-                          +"2.Semesterhälfte:<br>"+text_haelfte2;
-      };
+        target.innerHTML = "<br>1. Semesterhälfte:<br>" + text_haelfte1 + 
+					"2.Semesterhälfte:<br>"+text_haelfte2;
+      }
     }
     catch(e) {
       alert('Es ist ein Fehler beim Abrufen der freien Plätze aufgetreten: ' + e);
     }
   }
 
-  httpRequest.open('GET', './Customizing/global/include/fpraktikum/fp-ajax-request.php?task=freePlaces');
+  httpRequest.open('GET', './Customizing/global/include/fpraktikum/fp-ajax-request.php?task=freePlaces&semester='+semester);
   httpRequest.send();
 
   
@@ -74,8 +80,8 @@ function institutWahl(studiengang) {
 /**
  * if the cehckbox is checked include the partner-form
  */
-function partnerWahl(element) {
-  var target = document.getElementById('partnerWahl');
+function choosePartner(element) {
+  var target = document.getElementById('choosePartner');
   if (element.checked) {
     target.innerHTML = "<div>\
       HRZ-Account: <input onblur='checkPartner()' id='partner-hrz' type='text' name='partner-hrz' placeholder='s1234567'>\
@@ -100,10 +106,25 @@ function checkPartner() {
     try {
       if (httpRequest.readyState === XMLHttpRequest.DONE) {
         var response = JSON.parse(httpRequest.responseText);
-        console.log(response);
 
-        document.getElementById('partner-correct').innerHTML =
-          (response) ? 'Gefunden!' : 'Nicht gefunden!';
+        var note = "";
+
+        switch (response[0]) {
+          case "registered":
+            note = "Diese Person ist bereits registriert.";
+            break;
+          case "partner-accept":
+          case "partner-accepted":
+            note = "Diese Person ist bereits als Partner hinzugefügt worden.";
+            break;
+          case false:
+            note = "Gefunden";
+            break;
+          default:
+            note = "Nicht Gefunden";
+        }
+        
+        document.getElementById('partner-correct').innerHTML = note;
       };
     }
     catch(e) {
@@ -111,13 +132,36 @@ function checkPartner() {
     }
   }
 
-  httpRequest.open('GET', './Customizing/global/include/fpraktikum/fp-ajax-request.php?task=partner&hrz='+hrz+'&name='+name);
+  httpRequest.open('GET', './Customizing/global/include/fpraktikum/fp-ajax-request.php?task=partner&hrz='+hrz+'&name='+name+'&semester='+semester);
   httpRequest.send();
 }
 
 /**
- * ajax-call to get the free places in each institute
+ * check if one institute has been chosen and disable the option to choose the same institut again
  */
-function freePlaces() {
-  
+function disableInstitutWahl(institut) {
+	console.log('test');
+	console.log(institut);
+
+	switch(institut) {
+	case "PI1":
+		document.getElementById("PI1").disabled = true;
+		document.getElementById("IAP1").disabled = false;
+        	break;
+    	case "PI2":
+		document.getElementById("PI2").disabled = true;
+		document.getElementById("IAP2").disabled = false;
+        	break;
+    	case "IAP1":
+		document.getElementById("IAP1").disabled = true;
+		document.getElementById("PI1").disabled = false;
+        	break;
+    	case "IAP2":
+		document.getElementById("IAP2").disabled = true;
+		document.getElementById("PI2").disabled = false;
+        	break;
+   	default:
+        	console.log('default');
+	}
 }
+

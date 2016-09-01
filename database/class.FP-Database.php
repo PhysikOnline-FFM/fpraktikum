@@ -7,8 +7,9 @@ require_once('/home/elearning-www/public_html/elearning/ilias-4.3/Customizing/gl
 
 /**
  * class containing all functions necessary to communicate with the database
+ * for the registration process
  *
- * TODO: 
+ * @author LG, BK
  */
 class FP_Database extends Database
 {
@@ -33,238 +34,424 @@ class FP_Database extends Database
 
   /**
    * function to determine the free places in each institute
-   * -> DB call to determine institutes TODO
+   * -> DB call to determine institutes
+   *
+   * @param string $semester current semester
+   * @return array containing all data about the 'courses'
+   *               following: [graduation =>
+   *                                        institute =>
+   *                                                    semester_half =>
+   *                                                                    slots_remaining]
+   *               TODO: Partner is not being counted yet
    */
   public function freePlaces($semester) {
-    $stmt_angebote = $this->dbFP->prepare("SELECT institut, plaetze FROM ".$this->configFP['tbl-angebote']."
-      WHERE semester=? && (abschluss=? or abschluss='ALLE') && semester_haelfte=?");
+    /*
+     *
+     * new statement: returns max slots of given institute
+     * 
+     * old statement:
+     * $stmt_angebote = $this->dbFP->prepare("SELECT institut, plaetze FROM ".$this->configFP['tbl-angebote']."
+     * WHERE semester=? && (abschluss=? or abschluss='ALLE') && semester_haelfte=?");
+     *
+     * @author: Bastian
+     * @date: 31.08.2016
+     *
+     */ 
+    $stmt_courses = $this->dbFP->prepare(
+      "SELECT `institute`, `max_slots`
+        FROM `tbl_courses`
+        WHERE `semester`= ? 
+	        && ( `graduation` = ? 
+            OR `graduation` = '' 
+            OR `graduation` IS NULL) 
+          && `semester_half`= ? "
+    );
 
-    $stmt_anmeldung = $this->dbFP->prepare("SELECT hrz, partner FROM ".$this->configFP['tbl-anmeldung']." 
-      WHERE semester=? && abschluss=? && (semesterhaelfte1=? or semesterhaelfte2=?)");
-
-    $stmt_angebote->bind_param("sss", $semester, $abschluss, $semester_haelfte);
+    $stmt_courses->bind_param("ssi", $semester, $graduation, $semester_half);
     
-    $stmt_anmeldung->bind_param("ssss", $semester, $abschluss, $haelfte[0], $haelfte[1]);
+    $stmt_angebote_remaining = $this->dbFP->prepare("
+      SELECT (c.max_slots - COUNT(*)) 
+        FROM tbl_registrations AS r
+      JOIN tbl_partners AS p
+        ON p.registration_id = r.registration_id
+      JOIN tbl_courses AS c
+        ON c.course_id = r.course_id1
+        OR c.course_id = r.course_id2
+      WHERE c.institute = ? 
+        AND c.semester = ?
+        AND c.graduation = ?
+        AND c.semester_half = ?");
 
-    $abschluss_array = array("BA", "MA", "MAIT", "LA");
+    $stmt_angebote_remaining->bind_param("sssi", $institute, $semester, $graduation, $semester_half);
+
+    /**********************************************
+     *
+     * prepared_state: get remaining places
+     * @author: Bastian
+     * @date: 31.08.2016 18:30
+     * TODO: Testing prepared statement
+     * 
+     * PREPARED_STATEMENT: EXAMPLE
+     * $stmt_angebote_remaining = $this->dbFP->prepate("
+      SELECT (c.max_slots - COUNT(*)) 
+      FROM tbl_registrations AS r
+      JOIN tbl_partners AS p
+      ON p.registration_id = r.registration_id
+      JOIN tbl_courses AS c
+      ON c.course_id = r.course_id1
+      OR c.course_id = r.course_id2
+      WHERE c.institute = ? 
+      AND c.semester = ?
+      AND c.graduation = ?
+      AND c.semester_half = ?");
+     *
+     * SQL-QUERY: EXAMPLE 
+     * returns remaining slots of current registration
+     * SELECT (c.max_slots - COUNT(*)) AS 'remaining_slots' 
+      FROM tbl_registrations AS r
+      JOIN tbl_partners AS p
+      ON p.registration_id = r.registration_id
+      JOIN tbl_courses AS c
+      ON c.course_id = r.course_id1
+      OR c.course_id = r.course_id2
+      WHERE c.institute = 'IAP' 
+      AND c.semester = 'WS16/17'
+      AND c.graduation = 'BA'
+      AND c.semester_half = 0
+     *
+     **********************************************/
+    
+
+    $graduation_array = array("BA", "MA", "MAIT", "LA");
 
     $result = [];
     /*
-    result = [abschluss =>
-                          institut =>
-                                      haelfte =>
-                                                freeplaces]
+    result = [graduation =>
+                           institute =>
+                                       semester_halg =>
+                                                       freeplaces]
      */
     
     // loop through abschluss
-    foreach ($abschluss_array as $key => $abschluss) {
-      $result[$abschluss] = [];
+    foreach ($graduation_array as $key => $graduation) {
+      $result[$graduation] = [];
 
       // loop through semesterhälfte
-      for ($semester_haelfte=1; $semester_haelfte <= 2; $semester_haelfte++) { 
+      for ($semester_half=0; $semester_half <= 1; $semester_half++) { 
         
         // loop through institut
-        $stmt_angebote->execute();
-        $stmt_angebote->bind_result($institut, $plaetze);
-        while ($stmt_angebote->fetch()) {
+        $stmt_courses->execute();
+        $stmt_courses->bind_result($institute, $max_slots);
+        while ($stmt_courses->fetch()) {
           
-          $belegt = 0;
+          $stmt_courses->store_result();
 
-          $haelfte[0] = NULL;
-          $haelfte[1] = NULL;
+          $stmt_angebote_remaining->execute();
+          $stmt_angebote_remaining->bind_result($slots_remaining);
+          $stmt_angebote_remaining->fetch();
 
-          $haelfte[$semester_haelfte-1] = $institut;
+          $slots_remaining = ($slots_remaining == NULL) ? $max_slots : $slots_remaining;
 
-          $stmt_angebote->store_result();
+          $result[$graduation][$institute][$semester_half] = $slots_remaining;
 
-          // loop through anmeldungen
-          $stmt_anmeldung->execute();
-          $stmt_anmeldung->bind_result($hrz, $partner);
-          while ($stmt_anmeldung->fetch()) {
-            if ($partner) {
-              $belegt += 2;
-            } else {
-              $belegt += 1;
-            }
-          }
-          
-          $result[$abschluss][$institut][$semester_haelfte] = $plaetze - $belegt;
+          $stmt_angebote_remaining->store_result();
         }
       }
     }
 
     return $result;
-    $stmt_anmeldung->close();
-    $stmt_angebote->close();
+    $stmt_courses->close();
+    $stmt_angebote_remaining->close();
   }
 
   /**
    * function to check whether the hrz-number and name can be found in the ILIAS-DB
-   * @param [string] $hrz the partners hrz-account
-   * @param [string] $name the partners lastname 
+   * @param string $hrz the partners hrz-account
+   * @param string $name the partners lastname 
+   * @return bool true if user is in ILDB, false if not
+   *              TODO: check whether user is already registered/a partner or even
+   *                    the user online
    */
-  public function checkPartner($hrz, $name) {    
-    $stmt = $this->dbIL->prepare("SELECT usr_id FROM ".$this->configIL['tbl-name']." WHERE login=? && lastname=?");
+  public function checkPartner($hrz, $name, $semester) {    
+    $stmt = $this->dbIL->prepare("SELECT `usr_id` FROM ".$this->configIL['tbl-name']." 
+      WHERE `login` = ? && `lastname` = ?");
     $stmt->bind_param("ss", $hrz, $name);
 
     $stmt->execute();
     $stmt->bind_result($usr_id);
 
+    $user = $this->checkUser($hrz, $semester);
+
     if ($stmt->fetch()) {
-       return true;
+       return $user;
     } else {
       return false;
     }
+
+    $stmt->close();
   }
+
 
   /**
    * function to check whether the logged-in user is already registered/a partner or not
-   * TODO was passiert wenn ein Nutzer angemeldet und ein partner ist?
+   * To check:  is user registered 
+   *            is user a partner but not accepted
+   *            is user a partner and accepted
+   *
+   * @return array containing at index 0 the type of person ('angemeldet' if
+   *               user is registered, 'partner' if user is *only* a partner
+   *               and false if user is not in db)
    */
-  public function checkUser($user_matrikel, $user_login, $semester) {
+  public function checkUser($user_login, $semester) {
 
-    $stmt_angemeldet = $this->dbFP->prepare("SELECT hrz FROM ".$this->configFP['tbl-anmeldung']." 
-      WHERE matrikelnummer=? && semester=?");
-    $stmt_partner = $this->dbFP->prepare("SELECT hrz FROM ".$this->configFP['tbl-anmeldung']." 
-      WHERE partner=? && semester=?");
+    $stmt = $this->dbFP->prepare("SELECT `snumber1`, `snumber2`, `accepted` FROM tbl_partners AS p 
+     JOIN tbl_registrations AS r ON p.registration_id = r.registration_id 
+     JOIN tbl_courses AS c ON (r.course_id1 = c.course_id OR r.course_id2 = c.course_id) 
+     WHERE `c`.`semester` = ? AND (`p`.`snumber1` = ? OR `p`.`snumber2` = ?)");
 
-    $stmt_angemeldet->bind_param("ss", $user_matrikel, $semester);
-    $stmt_partner->bind_param("ss", $user_login, $semester);
+    $stmt->bind_param("sss", $semester, $user_login, $user_login);
+    $stmt->execute();
+    $stmt->bind_result($snumber1, $snumber2, $isAccepted);
 
-    $stmt_angemeldet->execute();
-    $stmt_partner->execute();
-
-    $stmt_angemeldet->bind_result($hrz);
-    $stmt_partner->bind_result($hrz);
-
-    if ($stmt_angemeldet->fetch()) {
-        return "angemeldet";
-      } else if ($stmt_partner->fetch()) {
-        return "partner";
-      } else {
-        return false;
-      }
+    $stmt->fetch();
+    if ($snumber1 == $user_login) {
+      return array('registered');
+    } else if ($snumber2 == $user_login && !$isAccepted) {
+      return array('partner-accept', $snumber1);
+    } else if ($snumber2 == $user_login && $isAccepted) {
+      return array('partner-accepted');
+    } else {
+      return array(false);
+    }
+    
+    $stmt->close();
   }
 
   /**
-   * function to add a new registration to the db
-   * @param  [array] $data       information given by the user
-   * @param  [string|null] $partner_db the hrz of the partner or NULL
+   * function to check whether the users hrz-account is actually in the ilDB
+   * @param  string containing the hrz-account of user
+   * @return bool true if user was found, false if not
    */
-  public function setAnmeldung($data, $partner_db)
-  {    
+  public function checkUserInfo($hrz)
+  {
+    $stmt = $this->dbIL->prepare("SELECT `".$this->configIL['col-name']."` FROM ".$this->configIL['tbl-name']."
+      WHERE `login` = ?");
+
+    $stmt->bind_param("s", $hrz);
+    $stmt->execute();
+    $stmt->bind_result($user_id);
+
+    return $stmt->fetch();
+    $stmt->close();
+  }
+
+  ////////// Registration //////////
+
+  /**
+   * function to add a new registration to the db
+   * @param  array $data       information given by the user:
+   *                           hrz, graduation, semester, institute1, institute2
+   * @param  string|null $partner_hrz the hrz of the partner or NULL
+   */
+  public function setAnmeldung($data, $partner_hrz)
+  {      
     
-    if ($partner_db == NULL) {
-      $stmt = $this->dbFP->prepare("INSERT INTO ".$this->configFP['tbl-anmeldung']." 
-        VALUES(?, ?, ?, ?, ?, NULL, ?, ?, NOW())");
+    $stmt_registration = $this->dbFP->prepare("INSERT IGNORE INTO ".$this->configFP['tbl-registration']." 
+      VALUES(
+      NULL, 
+      (SELECT `course_id` FROM ".$this->configFP['tbl-courses']." WHERE `semester` = ? AND `semester_half` = 0 AND `institute` = ? AND `graduation` = ?), 
+      (SELECT `course_id` FROM ".$this->configFP['tbl-courses']." WHERE `semester` = ? AND `semester_half` = 1 AND `institute` = ? AND `graduation` = ?), 
+      NOW())");
 
-      $stmt->bind_param("sssssss", $data['hrz'], $data['name'], $data['matrikel'], 
-        $data['abschluss'], $data['semester'], $data['institut1'], $data['institut2']);
+    // TODO: join instead of double select
+    $stmt_partners = $this->dbFP->prepare("INSERT INTO tbl_partners
+      VALUES(
+      NULL,
+      ?,
+      ?,
+      (SELECT `registration_id` FROM tbl_registrations 
+        WHERE `course_id1` = (SELECT `course_id` FROM ".$this->configFP['tbl-courses']." WHERE `semester` = ? AND 
+                                `semester_half` = 0 AND `institute` = ? AND `graduation` = ?)
+        AND `course_id2` = (SELECT `course_id` FROM ".$this->configFP['tbl-courses']." WHERE `semester` = ? AND 
+                                `semester_half` = 1 AND `institute` = ? AND `graduation` = ?)),
+      0)");
+
+    $stmt_registration->bind_param("ssssss", $data['semester'], $data['institute1'], $data['graduation'], 
+        $data['semester'], $data['institute2'], $data['graduation']);
+    
+    $stmt_partners->bind_param("ssssssss", $data['hrz'], $partner_hrz, $data['semester'], $data['institute1'], $data['graduation'], $data['semester'], $data['institute2'], $data['graduation']);
+
+    if ($stmt_registration->execute() && $stmt_partners->execute()) {
+      return true;
     } else {
-      $stmt = $this->dbFP->prepare("INSERT INTO ".$this->configFP['tbl-anmeldung']." 
-        VALUES(?, ?, ?, ?, ?, ?, ?, ?, NOW())");
-
-      $stmt->bind_param("ssssssss", $data['hrz'], $data['name'], $data['matrikel'], 
-        $data['abschluss'], $data['semester'], $partner_db, $data['institut1'], $data['institut2']);
+      die ("Fehler beim Eintragen der Daten: <br>registration: ".$stmt_registration->error."<br> partners: ".$stmt_partners->error);
     }
-
-    return $stmt->execute();
+    $stmt_registration->close();
+    $stmt_partners->close();
   }
 
   /**
    * function to get data about a user
-   * @param  [stinrg] $hrz
-   * @param  [string] $semester
-   * @return [array]           information found
+   * @param  string $hrz
+   * @param  string $semester
+   * @return array           information found
    */
   public function getAnmeldung($hrz, $semester)
   {
+    /*
+      New query:
+      SELECT p.snumber2, p.accepted, c.institute, c.graduation, r.register_date FROM tbl_partners AS p JOIN tbl_registrations as r On p.registration_id = r.registration_id JOIN tbl_courses as c ON r.course_id1 = c.course_id OR r.course_id2 = c.course_id WHERE c.semester_half = 0 AND p.snumber1 = 's123456'
+     */
 
-    $stmt = $this->dbFP->prepare("SELECT name, matrikelnummer, abschluss, partner, semesterhaelfte1, semesterhaelfte2, datum
-     FROM ".$this->configFP['tbl-anmeldung']." WHERE hrz=? && semester=?");
+    $stmt = $this->dbFP->prepare("SELECT p.snumber2, p.accepted, c.institute, c.graduation, r.register_date 
+      FROM tbl_partners AS p 
+      JOIN tbl_registrations AS r ON p.registration_id = r.registration_id 
+      JOIN tbl_courses AS c ON r.course_id1 = c.course_id OR r.course_id2 = c.course_id 
+      WHERE c.semester_half = ? AND p.snumber1 = ? AND c.semester = ?");
 
-    $stmt->bind_param("ss", $hrz, $semester);
-    $stmt->execute();
-    $stmt->bind_result($name, $matrikel, $abschluss, $partner, $institut1, $institut2, $datum);
+    $stmt->bind_param("iss", $semester_half, $hrz, $semester);
 
-    if ($stmt->fetch()) {
-      return array('name' => $name,
-        'matrikel' => $matrikel,
-        'abschluss' => $abschluss,
-        'partner' => $partner,
-        'datum' => $datum,
-        'institut1' => $institut1,
-        'institut2' => $institut2
-        );
-    } else {
-      die('Fehler beim Abfragen der Anmeldedaten!');
+    $data = [];
+    for ($semester_half = 0; $semester_half <= 1; $semester_half++) { 
+      $stmt->execute();
+      $stmt->bind_result($snumber2, $isAccepted, $institute, $graduation, $register_date);
+      if ($stmt->fetch()) {
+        $data['institute'.$semester_half] = $institute;
+      } else {
+        die("Fehler beim Abfragen der Anmeldedaten!");
+      }
     }
+    $data['partner'] = $snumber2;
+    $data['isAccepted'] = $isAccepted;
+    $data['graduation'] = $graduation;
+    $data['register_date'] = $register_date;
+
+    return $data;
+    
+    $stmt->close();
   }
 
   /**
    * function to delete the registration of one user
    * TODO: Partner
-   * @param  [array] $data 
-   * @return [bool]
+   * @param  array $data 
+   * @return bool if query was successfull
    */
   public function rmAnmeldung($data)
   {
-    $stmt = $this->dbFP->prepare("DELETE FROM ".$this->configFP['tbl-anmeldung']." 
-      WHERE hrz=? && matrikelnummer=? && semester=?");
+    // TODO: Join with other tables to check for right semester
+    $stmt = $this->dbFP->prepare("
+      DELETE FROM tbl_partners
+      WHERE `snumber1` = ?");
+    // $stmt = $this->dbFP->prepare("DELETE FROM ".$this->configFP['tbl-anmeldung']." 
+    //   WHERE `hrz` = ? && `semester` = ?");
 
-    $stmt->bind_param("sss", $data['hrz'], $data['matrikel'], $data['semester']);
+    $stmt->bind_param("s", $data['hrz']);
     return $stmt->execute();
+
+    $stmt->close();
   }
 
   /**
-   * function to add a new angebot to the db, plaetze needs to be an integer
+   * get all registrations in DB
+   * @param  string $semester 
+   * @return array           
    */
-  public function setAngebote($institut, $semester, $abschluss, $haelfte, $plaetze)
+  public function getAllAnmeldungen($semester)
   {
-    $stmt = $this->dbFP->prepare("INSERT INTO ".$this->configFP['tbl-angebote']."
-      VALUES(?, ?, ?, ?, ?)");
+    $stmt = $this->dbFP->prepare("SELECT p.snumber1, p.snumber2, r.register_date, c1.institute, c1.graduation, c2.institute 
+      FROM tbl_partners AS p 
+      JOIN tbl_registrations AS r ON p.registration_id = r.registration_id 
+      JOIN tbl_courses AS c1 ON c1.course_id = r.course_id1 
+      JOIN tbl_courses AS c2 ON c2.course_id = r.course_id2 
+      WHERE c1.semester = ? AND c2.semester = ?");
 
-    $stmt->bind_param("ssssi", $institut, $semester, $abschluss, $haelfte, $plaetze);
+    $stmt->bind_param("ss", $semester, $semester);
+    $stmt->execute();
+    $stmt->bind_result($hrz1, $hrz2, $date, $institute1, $graduation, $institute2);
+
+    $data = [];
+    while ($stmt->fetch()) {
+      array_push($data, array(
+        'hrz1' => $hrz1,
+        'hrz2' => $hrz2,
+        'graduation' => $graduation,
+        'institute1' => $institute1,
+        'institute2' => $institute2,
+        'date' => $date
+        ));
+    }
+
+    return $data;
+  }
+
+  ////////// Courses //////////
+
+  /**
+   * function to add a new course to the db, slots needs to be an integer
+   *
+   * @return bool if query was successfull
+   */
+  public function setAngebote($institute, $semester, $graduation, $semester_half, $slots)
+  {
+    $stmt = $this->dbFP->prepare("INSERT INTO tbl_courses
+      VALUES(NULL, ?, ?, ?, ?, ?)");
+
+    $stmt->bind_param("ssisi", $institute, $semester, $semester_half, $graduation, $slots);
     
     if($stmt->execute()) {
       return true;
     } else {
       die('Fehler beim Eintragen des Angebots.');
     }
+
+    $stmt->close();
   }
 
   /**
-   * function to reciece an multidim array containing the angebot data
+   * function to reciece an multidim array containing all course data
+   *
+   * @return array containing data about all angebote:
+   *               [['institut', 'semester', 'abschluss', 'semesterhaelfte', 'plaetze']]
    */
   public function getAngebote($semester)
   {
 
-    $stmt = $this->dbFP->prepare("SELECT institut, abschluss, semester_haelfte, plaetze 
-      FROM ".$this->configFP['tbl-angebote']." WHERE semester=? ORDER BY abschluss, institut, semester_haelfte");
+    $stmt = $this->dbFP->prepare("SELECT `institute`, `semester_half`, `graduation`, `max_slots` 
+      FROM tbl_courses WHERE `semester` = ? 
+      ORDER BY `graduation`, `institute`, `semester_half`");
 
     $stmt->bind_param("s", $semester);
     $stmt->execute();
-    $stmt->bind_result($institut, $abschluss, $haelfte, $plaetze);
+    $stmt->bind_result($institute, $semester_half, $graduation, $max_slots);
 
     $result = [];
     while($stmt->fetch()) {
        array_push($result, array(
-        'institut' => $institut,
-        'semester' => $semester,
-        'abschluss' => $abschluss,
-        'semester_haelfte' => $haelfte,
-        'plaetze' => $plaetze
+        'institute' => $institute,
+        'graduation' => $graduation,
+        'semester_half' => $semester_half,
+        'max_slots' => $max_slots
        ));
     } 
     return $result;
+
+    $stmt->close();
   }  
 
+  /**
+   * remove one course from db
+   * @param  array $data name of institut, semester, abschluss, semesterhaelfte
+   * @return bool
+   */
   public function rmAngebot($data)
   {
-    $stmt = $this->dbFP->prepare("DELETE FROM ".$this->configFP['tbl-angebote']." 
-      WHERE institut=? && semester=? && abschluss=? && semester_haelfte=?");
+    $stmt = $this->dbFP->prepare("DELETE FROM tbl_courses 
+      WHERE `institute` = ? AND `semester` = ? AND `semester_half` = ? AND `graduation` = ?");
     
-    $stmt->bind_param("ssss", $data['institut'], $data['semester'], $data['abschluss'], $data['semester_haelfte']);
+    $stmt->bind_param("ssis", $data['institute'], $data['semester'], $data['semester_half'], $data['graduation']);
     return $stmt->execute();
-  }
+
+    $stmt->close();
+  }  
 }

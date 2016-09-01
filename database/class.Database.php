@@ -21,6 +21,7 @@ class database
 
   public function __destruct()
   {
+      // throws error $this->db would be undefined
       //$this->db->close();
   }
 
@@ -32,14 +33,14 @@ class database
     $this->db->set_charset('UTF8');
   }
 
-  public function makeQuery($query)
-  {
-    // TODO: Database Security
-    //$query = mysqli_real_escape_string($this->db, $query);
+  // public function makeQuery($query)
+  // {
+  //   // TODO: Database Security
+  //   //$query = mysqli_real_escape_string($this->db, $query);
 
-    $dbResult = $this->db->query($query) or die("Error ".$this->db->error."!");
-    return $dbResult;
-  }
+  //   $dbResult = $this->db->query($query) or die("Error ".$this->db->error."!");
+  //   return $dbResult;
+  // }
 
   public function prepare($query)
   {
