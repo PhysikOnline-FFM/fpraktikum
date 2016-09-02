@@ -6,6 +6,21 @@ error_reporting(-1);
 require_once('/home/elearning-www/public_html/elearning/ilias-4.3/Customizing/global/include/fpraktikum/database/class.Database.php');
 
 /**
+ * Brainfuck SQL O.o?
+ *
+ * Checks if student has is student1
+ * SELECT COUNT(snumber1) FROM tbl_partners WHERE tbl_partners.snumber1 = 'Blah' 
+ * returns: 0 or more
+ *
+ * TODO: 
+ * - Query: Update snumber1 to value of snumber2 if snumber1 student was snumber1
+ * - Query: Update snumber2 to NULL  if student was snumber2
+ *
+ * @author: Bastian
+ * @date: 02.09.2016
+ */
+
+/**
  * class containing all functions necessary to communicate with the database
  * for the registration process
  *
@@ -15,7 +30,7 @@ class FP_Database extends Database
 {
   public function __construct()
   {
-    $dbConfig = parse_ini_file('/home/elearning-www/public_html/elearning/ilias-4.3/Customizing/global/include/fpraktikum/database/private/db-credentials.ini', true) or die("Can not read ini-file");
+    $dbConfig = parse_ini_file('/home/elearning-www/public_html/elearning/ilias-4.3/Customizing/global/include/fpraktikum/database/private/db-credentials.php', true) or die("Can not read ini-file");
 
     $configFP = $dbConfig['fpraktikum'];
     $configIL = $dbConfig['ilias'];

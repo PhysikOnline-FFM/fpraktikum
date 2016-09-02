@@ -33,29 +33,34 @@ switch ($user[0]) {
   default:
     $html = "
       <div id=\"fprakikum_registration\">
-      <small>Dateien liegen in der VM unter Customizing/global/include/fpraktikum/</small>
-      <form action='./Customizing/global/include/fpraktikum/submit/fp-submit.php' method='post'>
-        <p>Folgende Daten werden automatisch mitgeschickt:</p>
+        <small>Dateien liegen in der VM unter Customizing/global/include/fpraktikum/</small>
+        <form name='registration' action='./Customizing/global/include/fpraktikum/submit/fp-submit.php' method='post' onsubmit='return formValidate()'>
+          <p>Hi ".$user_firstname.", hier kannst du dich für das Fortgeschrittenen Praktikum im ".$semester." anmelden.</p>
+          <p>Wenn du bei der Anmeldung auf Probleme stößst, zögere nicht uns zu <a href='mailto:elearning@itp.uni-frankfurt.de'>schreiben</a>.
 
-        <input type='hidden' name='hrz' value='".$user_login."'>
-        <input type='hidden' name='semester' value='".$semester."'>
+          <div id='chooseInstitute'>
+            <input type='hidden' name='hrz' value='".$user_login."'>
+            <input type='hidden' name='semester' value='".$semester."'>
 
-        <ul>
-          <li><span class=\"label\">Login:</span><span class=\"value\">" . $user_login . "</span></li>
-          <li><span class=\"label\">Semester:</span><span class=\"value\"><span class=\"value\">" . $semester . "</span></li>
-        </ul>
+            <ul>
+              <li><span class=\"label\">Dein Login:</span><span class=\"value\">" . $user_login . "</span></li>
+              <!--<li><span class=\"label\">Semester:</span><span class=\"value\"><span class=\"value\">" . $semester . "</span></li>-->
+            </ul>
 
-        <h6>Dein Studiengang:</h6>
-        <input onchange=showInstitut('BA') type='radio' id=\"ba\" name='graduation' value='BA'><label for='ba'>Bachelor</label>
-        <input onchange=showInstitut('MA') type='radio' id=\"ma\" name='graduation' value='MA'><label for='ma'>Master</label>
-        <span id='instituts'></span>
-        <br>
-        <input onchange=choosePartner(this) type='checkbox' id='pa' name='check-partner'><label for='pa'>Ich möchte eine Partnerin/einen Partner angeben.</label>
-        <br>
-        <span id='choosePartner'></span>
-        <input class='submit' type='submit'>
-      </form>
-      <script type='text/javascript' src='./Customizing/global/include/fpraktikum/js/fp-anmeldung.js'></script>
+            <h6>Dein Studiengang:</h6>
+            <input class=\"radio_graduation\" onchange=showInstitut('BA') type='radio' id=\"ba\" name='graduation' value='BA'><label for='ba'>Bachelor</label>
+            <input class=\"radio_graduation\" onchange=showInstitut('MA') type='radio' id=\"ma\" name='graduation' value='MA'><label for='ma'>Master</label>
+            <span id='instituts'></span>
+          </div>
+
+          <div id='choosePartner'>
+            <input class=\"checkbox_partner\" onchange=choosePartner(this) type='checkbox' id='pa' name='check-partner'><label for='pa'>Ich möchte eine Partnerin/einen Partner angeben.</label>
+            <br>
+            <span id='partnerForm'></span>
+            <input class='submit' type='submit'>
+          </div>
+        </form>
+        <script type='text/javascript' src='./Customizing/global/include/fpraktikum/js/fp-anmeldung.js'></script>
       </div>
     ";
     break;
@@ -88,7 +93,7 @@ switch ($user[0]) {
     $html = "Du wurdest von jemandem als Partner angegeben:<br>
     <form action='fehltnoch' method='post'>
       <p>Die Daten deines Partners sind:</p>
-      <p>Name: ".$data['name']."</p>
+      <p>HRZ: ".$data['hrz']."</p>
       <p>Abschluss: ".$data['graduation']."</p>
       <p>Institut1: ".$data['institut1']."</p>
       <p>Institut2: ".$data['institut2']."</p>      
@@ -97,15 +102,10 @@ switch ($user[0]) {
       <p>Deine Daten:</p>
 
       <input type='hidden' name='hrz' value='".$user_login."'>
-      <input type='hidden' name='firstname' value='".$user_firstname."'>
-      <input type='hidden' name='lastname' value='".$user_lastname."'>
-      <input type='hidden' name='matrikel' value='".$user_matrikel."'>
       <input type='hidden' name='semester' value='".$semester."'>
       <input type='hidden' name='institut1' value='".$data['institut1']."'>
       <input type='hidden' name='institut2' value='".$data['institut2']."'>
 
-      <p>Name: ".$user_firstname." ".$user_lastname."</p>
-      <p>Matrikelnummer(oder Name, wenn leer): ".$user_matrikel."</p>
       <p>Login: ".$user_login."</p>
       <p>semester: ".$semester."<br>
 

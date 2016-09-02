@@ -32,12 +32,12 @@ function showInstitut(studiengang) {
         // build form
         for (var institut in data) {
           if (data[institut]['0']) {
-            text_haelfte1 += "<input onchange=disableInstitutWahl('"+institut+"2') type='radio' name='institute1' value='"+institut+"' id='"+institut+"1'>\
-              "+institut+" - Frei: "+data[institut]['0']+"</span><br>";
+            text_haelfte1 += "<input class='fp_institute' onchange=disableInstitutWahl() type='radio' name='institute1' value='"+institut+"' id='"+institut+"1'>\
+              "+institut+" - Frei: "+data[institut]['0']+"<br>";
           }
           if (data[institut]['1']) {
-            text_haelfte2 += "<input <input onchange=disableInstitutWahl('"+institut+"1') type='radio' name='institute2' value='"+institut+"' id='"+institut+"2'>\
-              "+institut+" - Frei: "+data[institut]['1']+"</span><br>";
+            text_haelfte2 += "<input class='fp_institute' onchange=disableInstitutWahl() type='radio' name='institute2' value='"+institut+"' id='"+institut+"2'>\
+              "+institut+" - Frei: "+data[institut]['1']+"<br>";
           }          
         }
 
@@ -81,7 +81,7 @@ function showInstitut(studiengang) {
  * if the cehckbox is checked include the partner-form
  */
 function choosePartner(element) {
-  var target = document.getElementById('choosePartner');
+  var target = document.getElementById('partnerForm');
   if (element.checked) {
     target.innerHTML = "<div>\
       HRZ-Account: <input onblur='checkPartner()' id='partner-hrz' type='text' name='partner-hrz' placeholder='s1234567'>\
@@ -139,29 +139,82 @@ function checkPartner() {
 /**
  * check if one institute has been chosen and disable the option to choose the same institut again
  */
-function disableInstitutWahl(institut) {
-	console.log('test');
-	console.log(institut);
+function disableInstitutWahl() {
+	//console.log('test');
+	//console.log(institute);
 
-	switch(institut) {
-	case "PI1":
-		document.getElementById("PI1").disabled = true;
-		document.getElementById("IAP1").disabled = false;
-        	break;
-    	case "PI2":
-		document.getElementById("PI2").disabled = true;
-		document.getElementById("IAP2").disabled = false;
-        	break;
-    	case "IAP1":
-		document.getElementById("IAP1").disabled = true;
-		document.getElementById("PI1").disabled = false;
-        	break;
-    	case "IAP2":
-		document.getElementById("IAP2").disabled = true;
-		document.getElementById("PI2").disabled = false;
-        	break;
-   	default:
-        	console.log('default');
-	}
+  var otherOption = document.getElementsByClassName('fp_institute');
+
+  for (var name in otherOption) {
+    var element = otherOption[name];
+
+    // why is otherOption.length in the array?
+    if (!element.id) {
+      continue;
+    }
+
+    var otherNumber = element.id.slice(-1) % 2 + 1;
+
+    if (!document.getElementById(element.id.slice(0,-1)+otherNumber)) {
+      continue;
+    }
+
+    if (!document.getElementById(element.id.slice(0,-1)+otherNumber).checked) {
+      element.disabled = false;
+    } else {
+      element.disabled = true;
+    }
+  }
+
+	// switch(institut) {
+	// case "PI1":
+	// 	document.getElementById("PI1").disabled = true;
+	// 	document.getElementById("IAP1").disabled = false;
+ //        	break;
+ //    	case "PI2":
+	// 	document.getElementById("PI2").disabled = true;
+	// 	document.getElementById("IAP2").disabled = false;
+ //        	break;
+ //    	case "IAP1":
+	// 	document.getElementById("IAP1").disabled = true;
+	// 	document.getElementById("PI1").disabled = false;
+ //        	break;
+ //    	case "IAP2":
+	// 	document.getElementById("IAP2").disabled = true;
+	// 	document.getElementById("PI2").disabled = false;
+ //        	break;
+ //   	default:
+ //        	console.log('default');
+  //}
 }
 
+/**
+ * checks if form is valid
+ * TODO: check if there are enough slots left
+ * @return {bool} 
+ */
+function formValidate() {
+  var form = document.forms['registration'];
+  var error = [];
+
+  if(!form['graduation'].value) {
+    error.push('Bitte wähle einen Studiengang aus.');
+  } else if (!form['institute1'].value || !form['institute2'].value) {
+    error.push('Bitte wähle zwei Institute aus.');
+  } else if (form['institute1'] == form['institute2']) {
+    error.push('Bitte wähle zwei verschiedene Institute.');
+  }
+
+  if(form['check-partner'].checked) {
+    if (document.getElementById('partner-correct').innerHTML != 'Gefunden') {
+      error.push('Dein Partner ist nicht valid.');
+    }
+  }
+
+  if(error[0]) {
+    alert(error.join());
+    return false;
+  } else {
+    return true;
+  }
+}

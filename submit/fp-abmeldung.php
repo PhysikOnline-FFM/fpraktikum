@@ -44,10 +44,12 @@ if ($error != "") {
 // it should be save now to access the db
 
 if ($fp_database->rmAnmeldung($data)) {
-  echo "<br>Deine Daten wurden erfolgreich gelöscht!<br>";
+  echo "<br>Du hast dich erfolgreich ausgetragen.<br>";
 } else {
-  echo "<br>Deine Daten konnten nicht gelöscht werden!<br>";
+  // TO-DO: Error-message + Info for user what he has to do (mailing admin? maybe?)
+  echo "<br>Du konntest dich nicht austragen.<br>";
 }
 
+header('Location: http://4-3.ilias.physikelearning.de/ilias.php?ref_id=11819&cmd=frameset&cmdClass=ilrepositorygui&cmdNode=du&baseClass=ilRepositoryGUI');
 ?>
 

@@ -93,5 +93,7 @@ if (!$fp_database->setAnmeldung($data, $partner_db)) {
   die('Es ist ein Fehler beim Speichern deiner Daten aufgetreten.');
 }
 
+header('Location: http://4-3.ilias.physikelearning.de/ilias.php?ref_id=11819&cmd=frameset&cmdClass=ilrepositorygui&cmdNode=du&baseClass=ilRepositoryGUI');
 ?>
-Deine Daten wurden erfolgreich gespeichert!
+
+<!--Deine Daten wurden erfolgreich gespeichert!-->
