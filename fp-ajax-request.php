@@ -5,10 +5,10 @@
  * August 2016 - LG
  */
 
-error_reporting(-1);
+//error_reporting(-1);
 //ini_set('display_errors', 1);
 
-require_once('/home/elearning-www/public_html/elearning/ilias-4.3/Customizing/global/include/fpraktikum/database/class.FP-Database.php');
+require_once('/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/database/class.FP-Database.php');
 
 if ($_GET['task'])
 {

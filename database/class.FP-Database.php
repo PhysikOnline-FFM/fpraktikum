@@ -1,9 +1,9 @@
 <?php
 
-error_reporting(-1);
+//error_reporting(-1);
 //ini_set('display_errors', 1);
 
-require_once('/home/elearning-www/public_html/elearning/ilias-4.3/Customizing/global/include/fpraktikum/database/class.Database.php');
+require_once('/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/database/class.Database.php');
 
 /**
  * Brainfuck SQL O.o?
@@ -30,7 +30,7 @@ class FP_Database extends Database
 {
   public function __construct()
   {
-    $dbConfig = parse_ini_file('/home/elearning-www/public_html/elearning/ilias-4.3/Customizing/global/include/fpraktikum/database/private/db-credentials.php', true) or die("Can not read ini-file");
+    $dbConfig = parse_ini_file('/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/database/private/db-credentials.php', true) or die("Can not read ini-file");
 
     $configFP = $dbConfig['fpraktikum'];
     $configIL = $dbConfig['ilias'];

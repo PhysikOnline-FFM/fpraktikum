@@ -20,7 +20,7 @@ foreach ($data as $name => $value) {
   }
 }
 
-require '/home/elearning-www/public_html/elearning/ilias-4.3/Customizing/global/include/fpraktikum/database/class.FP-Database.php';
+require '/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/database/class.FP-Database.php';
 
 $error = "";
 
@@ -50,6 +50,6 @@ if ($fp_database->rmAnmeldung($data)) {
   echo "<br>Du konntest dich nicht austragen.<br>";
 }
 
-header('Location: http://4-3.ilias.physikelearning.de/ilias.php?ref_id=11819&cmd=frameset&cmdClass=ilrepositorygui&cmdNode=du&baseClass=ilRepositoryGUI');
+header('Location: http://5-1.ilias.physikelearning.de/goto_FB13-PhysikOnline_cat_11819.html');
 ?>
 

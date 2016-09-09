@@ -7,12 +7,11 @@
  *       Keine Bestätigunsseite, sondern alles per AJAX erledigen
  * August 2016 - LG
  */
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+error_reporting(E_ERROR);
+//ini_set('display_errors', 1);
 
 
-
-require '/home/elearning-www/public_html/elearning/ilias-4.3/Customizing/global/include/fpraktikum/database/class.FP-Database.php';
+require '/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/database/class.FP-Database.php';
 
 global $ilUser;
 
