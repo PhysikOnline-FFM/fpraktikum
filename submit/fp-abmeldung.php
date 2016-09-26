@@ -15,7 +15,7 @@ $data = [
 
 foreach ($data as $name => $value) {
   if (!$value) {
-    echo '<h1>Bitte rufe diese Seite nur über das '.$Anmeldeformular.' auf.</h1>';
+    echo '<div class="alert alert-danger" role="alert"><strong>Fehler!</strong> Bitte rufe diese Seite nur über das '.$Anmeldeformular.' auf.</div>';
     exit();
   }
 }
@@ -37,17 +37,17 @@ if ($fp_database->checkUser($data['hrz'], $data['graduation']) == false) {
 // more checks, e.g. regex checks for entries
 
 if ($error != "") {
-  echo '<h1>'.$error.'</h1>';
+  echo '<div class="alert alert-danger" role="alert"><strong>Fehler!</strong> '.$error.'</div>';
   exit ();
 }
 
 // it should be save now to access the db
 
 if ($fp_database->rmAnmeldung($data)) {
-  echo "<br>Du hast dich erfolgreich ausgetragen.<br>";
+  echo '<div class="alert alert-success" role="alert"><strong>Super!</strong> Du hast dich erfolgreich ausgetragen.!</div>';
 } else {
   // TO-DO: Error-message + Info for user what he has to do (mailing admin? maybe?)
-  echo "<br>Du konntest dich nicht austragen.<br>";
+  echo '<div class="alert alert-danger" role="alert"><strong>Fehler!</strong> Du konntest dich aus unbekannten Gründen nicht austragen.</div>';
 }
 
 header('Location: http://5-1.ilias.physikelearning.de/goto_FB13-PhysikOnline_cat_11819.html');

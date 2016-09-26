@@ -37,7 +37,7 @@ $error = [];
 // are all fields filled?
 foreach ($data as $name => $value) {
   if (!$value) {
-    echo '<h1>Bitte rufe diese Seite nur über das '.$Anmeldeformular.' auf. Nicht alle Felder wurden ausgefüllt.</h1>';
+    echo '<div class="alert alert-danger" role="alert"><strong>Fehler!</strong> Bitte rufe diese Seite nur über das '.$Anmeldeformular.' auf.</div>';
     exit();
   }
 }
@@ -80,9 +80,11 @@ if ($data['institute1'] == $data['institute2']) {
 }
 
 if ($error != []) {
+  echo '<div class="alert alert-danger" role="alert"><strong>Fehler:</strong><ul>';
   foreach ($error as $key => $text) {
-    echo '<h3>'.$error[$key].'</h3><br>';
+    echo '<li>'.$error[$key].'</li>';
   }  
+  echo '</ul></div>';
   exit ();
 }
 

@@ -32,17 +32,37 @@ function showInstitut(studiengang) {
         // build form
         for (var institut in data) {
           if (data[institut]['0']) {
-            text_haelfte1 += "<input class='fp_institute' onchange=disableInstitutWahl() type='radio' name='institute1' value='"+institut+"' id='"+institut+"1'>\
-              "+institut+" - Frei: "+data[institut]['0']+"<br>";
+            text_haelfte1 += 
+				"<div class='radio'>"+
+					"<label>"+
+					"<input class='fp_institute' onchange=disableInstitutWahl() type='radio' name='institute1' value='"+institut+"' id='"+institut+"1'>"+
+					"<span style='display:inline-block; min-width:40px'>"+institut+"</span>&nbsp;"+
+					"<em class='hint text-muted small'>(frei: <span class='"+(data[institut]['0'] > 0 ? 'text-success' : 'text-danger')+"'>"+ data[institut]['0']+ "</span>)</em>"+
+					"</label>"+
+				"</div>";
           }
           if (data[institut]['1']) {
-            text_haelfte2 += "<input class='fp_institute' onchange=disableInstitutWahl() type='radio' name='institute2' value='"+institut+"' id='"+institut+"2'>\
-              "+institut+" - Frei: "+data[institut]['1']+"<br>";
+            text_haelfte2 += 
+				"<div class='radio'>"+
+					"<label>"+
+					"<input class='fp_institute' onchange=disableInstitutWahl() type='radio' name='institute2' value='"+institut+"' id='"+institut+"2'>"+
+					"<span style='display:inline-block; min-width:40px'>"+institut+"</span>&nbsp;"+
+					"<em class='hint text-muted small'>(frei: <span class='"+(data[institut]['1'] > 0 ? 'text-success' : 'text-danger')+"'>"+ data[institut]['1']+ "</span>)</em>"+
+					"</label>"+
+				"</div>";
           }          
         }
-
-        target.innerHTML = "<br>1. Semesterhälfte:<br>" + text_haelfte1 + 
-					"2.Semesterhälfte:<br>"+text_haelfte2;
+		
+		target.innerHTML = 
+			"<div class='form-group'>"+
+				"<label class='col-sm-2 control-label'>1. Semesterhälfte</label>"+
+				"<div class='col-sm-10 col-md-2'>" + text_haelfte1 + "</div>"+
+			"</div>"+
+			"<div class='form-group'>"+
+				"<label class='col-sm-2 control-label'>2.Semesterhälfte</label>"+
+				"<div class='col-sm-10 col-md-2'>" + text_haelfte2 + "</div>"+
+			"</div>"+
+			"<div id='partner-correct'></div>";
       }
     }
     catch(e) {
@@ -83,11 +103,16 @@ function showInstitut(studiengang) {
 function choosePartner(element) {
   var target = document.getElementById('partnerForm');
   if (element.checked) {
-    target.innerHTML = "<div>\
-      HRZ-Account: <input onblur='checkPartner()' id='partner-hrz' type='text' name='partner-hrz' placeholder='s1234567'>\
-      Nachname: <input onblur='checkPartner()' id='partner-name' type='text' name='partner-name'><br>\
-      <span id='partner-correct'></span>\
-      </div><br>";
+    target.innerHTML = 
+		"<div class='form-group'>"+
+			"<label class='col-sm-2 control-label' for='partner-hrz'>HRZ-Account</label>"+
+			"<div class='col-sm-10 col-md-2'><input onblur='checkPartner()' id='partner-hrz' type='text' name='partner-hrz' placeholder='s1234567' class='form-control'></div>"+
+		"</div>"+
+		"<div class='form-group'>"+
+			"<label class='col-sm-2 control-label' for='partner-name'>Nachname</label>"+
+			"<div class='col-sm-10 col-md-2'><input onblur='checkPartner()' id='partner-name' type='text' name='partner-name' class='form-control'></div>"+
+		"</div>"+
+		"<div id='partner-correct'></div>";
   } else {
     target.innerHTML = "";
   }
@@ -111,17 +136,17 @@ function checkPartner() {
 
         switch (response[0]) {
           case "registered":
-            note = "Diese Person ist bereits registriert.";
+            note = "<div class='alert alert-info' role='alert'><strong>Nicht möglich!</strong> Diese Person ist bereits registriert.</div>";
             break;
           case "partner-accept":
           case "partner-accepted":
-            note = "Diese Person ist bereits als Partner hinzugefügt worden.";
+            note = "<div class='alert alert-info' role='alert'><strong>Zu spät!</strong> Diese Person ist bereits als Partner hinzugefügt worden.</div>";
             break;
           case false:
-            note = "Gefunden";
+            note = "<div class='alert alert-success' role='alert'><strong>Super!</strong> Person existiert.</div>";
             break;
           default:
-            note = "Nicht Gefunden";
+            note = "<div class='alert alert-warning' role='alert'><strong>Vertippt?</strong> Person wurde nicht gefunden.</div>";
         }
         
         document.getElementById('partner-correct').innerHTML = note;

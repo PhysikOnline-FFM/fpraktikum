@@ -28,7 +28,7 @@ $error = [];
 // are all fields filled?
 foreach ($data as $name => $value) {
   if (!$value) {
-    echo '<h1>Bitte rufe diese Seite nur über das '.$Anmeldeformular.' auf.</h1>';
+    echo '<div class="alert alert-danger" role="alert"><strong>Fehler!</strong> Bitte rufe diese Seite nur über das '.$Anmeldeformular.' auf.</div>';
     exit();
   }
 }
@@ -48,10 +48,12 @@ if ($fp_database->checkUserInfo($data)) {
 }
 // more checks, e.g. regex checks for entries and check whether info is in il-db and whether there are free places in requested institute
 
-if ($error != []) {
+if (!empty($error)) {
+  echo '<div class="alert alert-danger" role="alert"><strong>Fehler:</strong><ul>';
   foreach ($error as $key => $text) {
-    echo '<h1>'.$error[$key].'</h1><br>';
+    echo '<li>'.$error[$key].'</li>';
   }  
+  echo '</ul></div>';
   exit ();
 }
 
@@ -63,4 +65,4 @@ if (!$fp_database->setAnmeldung($data, $partner_db)) {
 }
 
 ?>
-<br>Deine Daten wurden erfolgreich gespeichert!<br>
+<div class="alert alert-success" role="alert"><strong>Super!</strong> Deine Daten wurden erfolgreich gespeichert!</div>
