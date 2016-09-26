@@ -18,10 +18,7 @@ global $ilUser;
 $user_firstname = $ilUser->getFirstname();
 $user_lastname = $ilUser->getLastname();
 $user_login = $ilUser->getLogin();
-$user_matrikel = $ilUser->getMatriculation();
-// for debugging
-$user_matrikel = ($user_matrikel == "") ? $user_firstname : $user_matrikel;
-// should be determined automatically
+
 $semester = 'WS16/17';
 
 $fp_database = new FP_Database();
@@ -30,20 +27,27 @@ $user = $fp_database->checkUser($user_login, $semester);
 
 switch ($user[0]) {
   default:
-    $html = "
-      <div id=\"fprakikum_registration\">
-        <small>Dateien liegen in der VM unter Customizing/global/include/fpraktikum/</small>
+    $html = "	
+	<div id=\"fprakikum_registration\">
+
+<small>Dateien liegen in der VM unter Customizing/global/include/fpraktikum/</small>
         <form name='registration' action='./Customizing/global/include/fpraktikum/submit/fp-submit.php' method='post' onsubmit='return formValidate()'>
           <p>Hi ".$user_firstname.", hier kannst du dich für das Fortgeschrittenen Praktikum im ".$semester." anmelden.</p>
-          <p>Wenn du bei der Anmeldung auf Probleme stößst, zögere nicht uns zu <a href='mailto:elearning@itp.uni-frankfurt.de'>schreiben</a>.
+         <p> <button  type='button' class='btn btn-default' data-target='#demo' data-toggle='collapse' >Hilfe?/Help?</button>
 
+	<div id='demo' class='collapse'>
+		Informationen kommen bald.
+	</div>       
+	  <p>Wenn du bei der Anmeldung auf Probleme stößst, zögere nicht uns zu <a href='mailto:elearning@itp.uni-frankfurt.de'>schreiben</a>.
+			
+		
           <div id='chooseInstitute'>
             <input type='hidden' name='hrz' value='".$user_login."'>
             <input type='hidden' name='semester' value='".$semester."'>
 
             <ul>
-              <li><span class=\"label\">Dein Login:</span><span class=\"value\">" . $user_login . "</span></li>
-              <!--<li><span class=\"label\">Semester:</span><span class=\"value\"><span class=\"value\">" . $semester . "</span></li>-->
+              <li><span class=\"\">Dein Login:</span><span class=\"value\">" . $user_login . "</span></li>
+              <li><span class=\"\">Semester:</span><span class=\"value\"><span class=\"value\">" . $semester . "</span></li>
             </ul>
 
             <h6>Dein Studiengang:</h6>
@@ -56,11 +60,12 @@ switch ($user[0]) {
             <input class=\"checkbox_partner\" onchange=choosePartner(this) type='checkbox' id='pa' name='check-partner'><label for='pa'>Ich möchte eine Partnerin/einen Partner angeben.</label>
             <br>
             <span id='partnerForm'></span>
-            <input class='submit' type='submit'>
+            <input class='submit btn btn-default' type='submit' value='Anmelden'>
           </div>
         </form>
         <script type='text/javascript' src='./Customizing/global/include/fpraktikum/js/fp-anmeldung.js'></script>
-      </div>
+            
+	</div>
     ";
     break;
   case 'registered':
@@ -122,5 +127,6 @@ if (new DateTime() < new DateTime("2016-09-18 00:00:00")) {
 } else if (new DateTime() > new DateTime("2016-10-02 00:00:00")) {
   // $html = "<b>Die Anmeldung ist beendet!</b>";
 }
+
 
 ini_set('display_errors', 0);

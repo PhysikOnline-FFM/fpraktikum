@@ -193,6 +193,8 @@ function disableInstitutWahl() {
  * TODO: check if there are enough slots left
  * @return {bool} 
  */
+
+
 function formValidate() {
   var form = document.forms['registration'];
   var error = [];

@@ -55,10 +55,10 @@ if ($fp_database->checkUser($data['hrz'], $data['semester'])[0] != false) {
 // check if partner is valid
 if ($partner) {
   if ($fp_database->checkPartner($partner_hrz, $partner_name, $data['semester'])[0] != false) {
-    array_push($error, "Dein angebener Partner ist nicht valid, bitte gehe wieder zum ".$Anmeldeformular." zurück");
+    array_push($error, "Dein angebener Partner konnte nicht gefunden werden, bitte gehe wieder zum ".$Anmeldeformular." zurück");
   }
 }
-// check if hez-account is valid
+// check if hrz-account is valid
 if (!$fp_database->checkUserInfo($data['hrz'])) {
   array_push($error, "Wir konnten dich nicht mit ".$data['hrz']." in der Datenbank finden, bitte gehe wieder zum ".$Anmeldeformular." zurück");
 }
@@ -74,14 +74,14 @@ if ($remaining_places[$data['graduation']][$data['institute2']][1] < $slots_need
   array_push($error, "Leider sind in deinem gewünschtem Institut ".$data['institute2']." nicht genügend Plätze frei, bitte gehe wieder zum ".$Anmeldeformular." zurück");
 }
 
-// check whether both instituts are different
+// check whether both instituts are differente
 if ($data['institute1'] == $data['institute2']) {
   array_push($error, "In beiden Semesterhälften müssen unterschiedliche Institute gewählt werden, bitte gehe wieder zum ".$Anmeldeformular." zurück");
 }
 
 if ($error != []) {
   foreach ($error as $key => $text) {
-    echo '<h1>'.$error[$key].'</h1><br>';
+    echo '<h3>'.$error[$key].'</h3><br>';
   }  
   exit ();
 }
