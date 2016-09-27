@@ -46,35 +46,35 @@ switch ($user[0]) {
 				<input type='hidden' name='semester' value='".$semester."'>
 				
 				<div class='form-group'>
-					<label class='col-sm-2 control-label'>Benutzer</label>
-					<div class='col-sm-10'>
+					<label class='col-sm-3 col-md-3 col-lg-2 control-label'>Benutzer</label>
+					<div class='col-sm-9 col-md-9 col-lg-10'>
 						<span class='form-control-static value'>" .$user_login. "</span>	
 					</div>
 				</div>
 				<div class='form-group'>
-					<label class='col-sm-2 control-label'>Semester</label>
-					<div class='col-sm-10'>
+					<label class='col-sm-3 col-md-3 col-lg-2 control-label'>Semester</label>
+					<div class='col-sm-9 col-md-9 col-lg-10'>
 						<span class='form-control-static value'>" .$semester. "</span>
 					</div>
 				</div>
 				<div class='form-group'>
-					<label class='col-sm-2 control-label'>Studiengang</label>
-					<div class='col-sm-10 radio' id='chooseInstitute'>
+					<label class='col-sm-3 col-md-3 col-lg-2 control-label'>Studiengang</label>
+					<div class='col-sm-9 col-md-9 col-lg-10 radio' id='chooseInstitute'>
 						<label for='ba'><input class='radio_graduation' onchange=showInstitut('BA') type='radio' id='ba' name='graduation' value='BA'>Bachelor</label>
 						<label for='ma'><input class='radio_graduation' onchange=showInstitut('MA') type='radio' id='ma' name='graduation' value='MA'>Master</label>
 						<div id='instituts'></div>
 					</div>
 				</div>
 				<div class='form-group'>
-					<label class='col-sm-2 control-label'>Partnerwahl</label>
-					<div class='col-sm-10 checkbox' id='choosePartner'>
+					<label class='col-sm-3 col-md-3 col-lg-2 control-label'>Partnerwahl</label>
+					<div class='col-sm-9 col-md-9 col-lg-10 checkbox' id='choosePartner'>
 						<label for='pa'><input class='checkbox_partner' onchange=choosePartner(this) type='checkbox' id='pa' name='check-partner'>Ich möchte eine Partnerin/einen Partner angeben.</label>
 						<div id='partnerForm'></div>
 					</div>
 				</div>
 				<div class='form-group'>
-					<label class='col-sm-2 control-label'></label>
-					<div class='col-sm-10' id='choosePartner'>
+					<label class='col-sm-3 col-md-3 col-lg-2 control-label'></label>
+					<div class='col-sm-9 col-md-9 col-lg-10' id='choosePartner'>
 						<input class='submit btn btn-default' type='submit' value='Anmelden'>
 					</div>
 				</div>
@@ -99,44 +99,44 @@ switch ($user[0]) {
 				
 				<p>Dies sind die Informationen, die in der Datenbank gespeichert sind:</p>
 				<div class='form-group'>
-					<label class='col-sm-2 control-label'>Benutzername</label>
-					<div class='col-sm-10'>
+					<label class='col-sm-4 col-md-3 col-lg-2 control-label'>Benutzername</label>
+					<div class='col-sm-8 col-md-9 col-lg-10'>
 						<span class='form-control-static'>" .$user_login. "</span>
 					</div>
 				</div>
 				<div class='form-group'>
-					<label class='col-sm-2 control-label'>Studiengang</label>
-					<div class='col-sm-10'>
+					<label class='col-sm-4 col-md-3 col-lg-2 control-label'>Studiengang</label>
+					<div class='col-sm-8 col-md-9 col-lg-10'>
 						<span class='form-control-static'>" .$data['graduation']. "</span>
 					</div>
 				</div>
 				<div class='form-group'>	
-					<label class='col-sm-2 control-label'>Partner (Benutzername)</label>
-					<div class='col-sm-10'>
+					<label class='col-sm-4 col-md-3 col-lg-2 control-label'>Partner (Benutzername)</label>
+					<div class='col-sm-8 col-md-9 col-lg-10'>
 						<span class='form-control-static'>" .$data['partner']. "</span>
 					</div>
 				</div>
 				<div class='form-group'>	
-					<label class='col-sm-2 control-label'>Datum</label>
-					<div class='col-sm-10'>
+					<label class='col-sm-4 col-md-3 col-lg-2 control-label'>Datum</label>
+					<div class='col-sm-8 col-md-9 col-lg-10'>
 						<span class='form-control-static'>" .$data['register_date']. "</span>
 					</div>
 				</div>
 				<div class='form-group'>	
-					<label class='col-sm-2 control-label'>1.&nbsp;Semesterhälfte</label>
-					<div class='col-sm-10'>
+					<label class='col-sm-4 col-md-3 col-lg-2 control-label'>1.&nbsp;Semesterhälfte</label>
+					<div class='col-sm-8 col-md-9 col-lg-10'>
 						<span class='form-control-static'>" .$data['institute0']. "</span>
 					</div>
 				</div>
 				<div class='form-group'>	
-					<label class='col-sm-2 control-label'>2.&nbsp;Semesterhälfte</label>
-					<div class='col-sm-10'>
+					<label class='col-sm-4 col-md-3 col-lg-2 control-label'>2.&nbsp;Semesterhälfte</label>
+					<div class='col-sm-8 col-md-9 col-lg-10'>
 						<span class='form-control-static'>" .$data['institute1']. "</span>
 					</div>
 				</div>
 				<div class='form-group'>	
-					<label class='col-sm-2 control-label'></label>
-					<div class='col-sm-10'>
+					<label class='col-sm-4 col-md-3 col-lg-2 control-label'></label>
+					<div class='col-sm-8 col-md-9 col-lg-10'>
 						<span class='form-control-static'>Hier kannst du dich wieder <button onclick=confirmAbmeldung() type='submit' class='btn btn-danger'>Abmelden</button></span>
 					</div>
 				</div>

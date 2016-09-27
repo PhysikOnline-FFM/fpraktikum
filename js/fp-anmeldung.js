@@ -55,12 +55,12 @@ function showInstitut(studiengang) {
 		
 		target.innerHTML = 
 			"<div class='form-group'>"+
-				"<label class='col-sm-2 control-label'>1. Semesterhälfte</label>"+
-				"<div class='col-sm-10 col-md-2'>" + text_haelfte1 + "</div>"+
+				"<label class='col-sm-4 col-md-3 col-lg-2 control-label'>1.&nbsp;Semesterhälfte</label>"+
+				"<div class='col-sm-8 col-md-9 col-lg-4'>" + text_haelfte1 + "</div>"+
 			"</div>"+
 			"<div class='form-group'>"+
-				"<label class='col-sm-2 control-label'>2.Semesterhälfte</label>"+
-				"<div class='col-sm-10 col-md-2'>" + text_haelfte2 + "</div>"+
+				"<label class='col-sm-4 col-md-3 col-lg-2 control-label'>2.&nbsp;Semesterhälfte</label>"+
+				"<div class='col-sm-8 col-md-9 col-lg-4'>" + text_haelfte2 + "</div>"+
 			"</div>"+
 			"<div id='partner-correct'></div>";
       }
@@ -105,12 +105,12 @@ function choosePartner(element) {
   if (element.checked) {
     target.innerHTML = 
 		"<div class='form-group'>"+
-			"<label class='col-sm-2 control-label' for='partner-hrz'>HRZ-Account</label>"+
-			"<div class='col-sm-10 col-md-2'><input onblur='checkPartner()' id='partner-hrz' type='text' name='partner-hrz' placeholder='s1234567' class='form-control'></div>"+
+			"<label class='col-sm-4 col-md-2 control-label' for='partner-hrz'>HRZ-Account</label>"+
+			"<div class='col-sm-8 col-md-3 col-lg-2'><input onblur='checkPartner()' id='partner-hrz' type='text' name='partner-hrz' placeholder='s1234567' class='form-control'></div>"+
 		"</div>"+
 		"<div class='form-group'>"+
-			"<label class='col-sm-2 control-label' for='partner-name'>Nachname</label>"+
-			"<div class='col-sm-10 col-md-2'><input onblur='checkPartner()' id='partner-name' type='text' name='partner-name' class='form-control'></div>"+
+			"<label class='col-sm-4 col-md-2 control-label' for='partner-name'>Nachname</label>"+
+			"<div class='col-sm-8 col-md-3 col-lg-2'><input onblur='checkPartner()' id='partner-name' type='text' name='partner-name' class='form-control'></div>"+
 		"</div>"+
 		"<div id='partner-correct'></div>";
   } else {
