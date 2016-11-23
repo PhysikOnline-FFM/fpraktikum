@@ -11,7 +11,9 @@ error_reporting(E_ERROR);
 //ini_set('display_errors', 1);
 
 
-require '/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/database/class.FP-Database.php';
+//require '/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/database/class.FP-Database.php';
+require 'class.FP-Database.php';                // only used for local modifications on Pc (Christian Grossmueller)
+require 'class.Database.php';                   // comment it out if used on server
 
 global $ilUser;
 
