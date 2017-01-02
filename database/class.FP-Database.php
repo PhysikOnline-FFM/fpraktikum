@@ -279,6 +279,29 @@ class FP_Database extends Database
       NOW())");
 
     // TODO: join instead of double select
+      /** Probably the answer :
+       *
+       * (still occuring double counts)
+       * Example:
+       * Institute | course_id1 | course_id2
+       * IAP         1              2
+       * IAP         2              1
+       *
+       * Need to eliminate them.
+       *
+       * SELECT t1.course_id AS `course_id1` ,t2.course_id AS `course_id2`
+       * SELECT *
+       * FROM `tbl_courses`
+       * AS t1
+       * JOIN `tbl_courses`
+       * AS t2
+       * ON t1.institute=t2.institute
+       * WHERE t1.semester_half != t2.semester_half
+       * AND t1.graduation = t2.graduation
+       * AND t1.graduation = "BA"
+       * AND t1.semester = t2.semester
+       * And t1.semester = "WS16/17"
+       */
     $stmt_partners = $this->dbFP->prepare("INSERT INTO tbl_partners
       VALUES(
       NULL,
