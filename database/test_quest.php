@@ -6,6 +6,7 @@
  * Time: 21:09
  *
  * General Play ground for tests
+ * some test for OAuth
  */
 foreach ($graduation_array as $key => $graduation) {
     $result[$graduation] = [];
