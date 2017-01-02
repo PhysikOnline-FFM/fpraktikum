@@ -17,16 +17,26 @@ require 'class.Database.php';                   // comment it out if used on ser
 
 global $ilUser;
 
-$user_firstname = $ilUser->getFirstname();
-$user_lastname = $ilUser->getLastname();
-$user_login = $ilUser->getLogin();
+$user_firstname = $ilUser->getFirstname();      // $ilUser is a ILLias system variable ,the function fetches firstname
+$user_lastname = $ilUser->getLastname();        // fetches Lastname
+$user_login = $ilUser->getLogin();              // fetches logindata
 
-$semester = 'WS16/17';
+$semester = 'WS16/17';                         //TODO: Automatic Semester Dates ( smal if statement, which checks for Months for instance
 
 $fp_database = new FP_Database();
 
-$user = $fp_database->checkUser($user_login, $semester);
-
+$user = $fp_database->checkUser($user_login, $semester);    // Variable containing all needed infos about the current user
+                                                            // wether he is already registerd or not.
+/**
+ * Switch to evaluate the different types of user statuses.
+ * Statuses : default , registered, partner accept, partner accepted
+ * default : shows the standart html mask of the site and is equivalent to 'not registered' saved as the variable $html
+ * registered : shows a html mask containing all infos about the registration , degree , etc. saved as $html
+ * partner accept: shows a html mask containing the info that someone else has added the user as partner
+ * the user gets the chance to see who added him to which group and too accept his partner. TODO
+ * !!!TODO partner accepted : TODO!!!
+ *
+ */
 switch ($user[0]) {
   default:
     $html = "
@@ -183,10 +193,14 @@ switch ($user[0]) {
 	</div>";
     break;
   case 'partner-accepted':
-    //show message that user is partner of x
+    // TODO show message that user is partner of x
     break;
 }
-
+/**
+ * statement to determin wether the Registration is available or not.
+ * short check if the "todays" date == the wanted date.
+ * TODO: make it possible to change the date time which is checked by the statement via admin page.
+ */
 if (new DateTime() < new DateTime("2016-09-18 00:00:00")) {
   // $html = "<b>Die Anmeldung ist noch nicht freigeschaltet!</b>";
 } else if (new DateTime() > new DateTime("2016-10-02 00:00:00")) {
