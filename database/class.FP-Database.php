@@ -278,6 +278,9 @@ class FP_Database extends Database
       (SELECT `course_id` FROM ".$this->configFP['tbl-courses']." WHERE `semester` = ? AND `semester_half` = 0 AND `institute` = ? AND `graduation` = ?), 
       (SELECT `course_id` FROM ".$this->configFP['tbl-courses']." WHERE `semester` = ? AND `semester_half` = 1 AND `institute` = ? AND `graduation` = ?), 
       NOW())");
+      /**
+       * JOIN hier nicht möglich, da tabelle dadurch redundant wird. z.B.:
+       */
 
     // TODO: join instead of double select
       /** Probably the answer :
@@ -290,19 +293,21 @@ class FP_Database extends Database
        *
        * Need to eliminate them.
        *
-       * SELECT t1.course_id AS `course_id1` ,t2.course_id AS `course_id2`
-       * SELECT *
-       * FROM `tbl_courses`
-       * AS t1
-       * JOIN `tbl_courses`
-       * AS t2
-       * ON t1.institute=t2.institute
-       * WHERE t1.semester_half != t2.semester_half
-       * AND t1.graduation = t2.graduation
-       * AND t1.graduation = "BA"
-       * AND t1.semester = t2.semester
-       * And t1.semester = "WS16/17"
+       *         SELECT t1.course_id AS `course_id1` ,t2.course_id AS `course_id2`
+            FROM `tbl_courses`
+            AS t1
+            JOIN `tbl_courses`
+            AS t2
+            ON t1.semester = t2.semester
+            WHERE t1.semester_half != t2.semester_half
+            AND t1.graduation = t2.graduation
+            AND t1.graduation = "BA"
+            AND t1.institute = "IAP"
+            AND t2.Institute = "PI"
+            AND t1.semester = "WS16/17"
+            AND t1.semester_half = 0 
        */
+
     $stmt_partners = $this->dbFP->prepare("INSERT INTO tbl_partners
       VALUES(
       NULL,
