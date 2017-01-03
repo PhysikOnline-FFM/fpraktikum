@@ -305,7 +305,7 @@ class FP_Database extends Database
             AND t1.institute = "IAP"
             AND t2.Institute = "PI"
             AND t1.semester = "WS16/17"
-            AND t1.semester_half = 0 
+            AND t1.semester_half = 0
        */
 
     $stmt_partners = $this->dbFP->prepare("INSERT INTO tbl_partners
