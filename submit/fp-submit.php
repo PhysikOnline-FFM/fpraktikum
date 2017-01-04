@@ -6,14 +6,14 @@
  * check all error-states
  * check logical issues
  */ 
-print_r('Its me, ...');
-echo '<h1>Test</h1>';
+
+
  ini_set('E_ALL',1);
- echo '<h1>Test</h1>';
+
  ini_set('display_errors', 1);
- echo '<h1>Test</h1>';
+
  require '/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/database/class.FP-Database.php';
- echo '<h1>Test</h1>';
+
 /**
  * script checks input from user and writes registration to db
  * 
@@ -37,7 +37,7 @@ $remaining_places = 0;											// stores remaining slots for students
 $slots_needed = 1;
 
 if($_POST['check-partner'] == "on"){ print_r('yammi'); $wantsPartner = true; } else { $wantsPartner = false; }	// stores boolean of checkbox: true if student wants partner
-print_r("LOL");
+
 if ($wantsPartner) {
 	$slots_needed = 2;													// if student set checkbox, student wants partner
 	$remaining_places = $fp_database->freePlaces($data['semester']);	// stores remaining places
@@ -73,7 +73,7 @@ if ($partner) {
 if (!$fp_database->checkUserInfo($data['hrz'])) {
   array_push($error, "Wir konnten dich nicht mit ".$data['hrz']." in der Datenbank finden, bitte gehe wieder zum ".$Anmeldeformular." zurück");
 }
-print_r('hmmm');
+
 if ($remaining_places[$data['graduation']][$data['institute1']][0] < $slots_needed) {
   array_push($error, "Leider sind in deinem gewünschtem Institut ".$data['institute1']." nicht genügend Plätze frei, bitte gehe wieder zum ".$Anmeldeformular." zurück");
 }
@@ -104,7 +104,7 @@ if ($error != []) {
 	}
 	//header('Location: http://5-1.ilias.physikelearning.de/goto_FB13-PhysikOnline_cat_11819.html');
 }
-print_r('Mario!');
+
 ?>
 
 <!--Deine Daten wurden erfolgreich gespeichert!-->
