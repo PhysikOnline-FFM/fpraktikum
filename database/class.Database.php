@@ -1,5 +1,6 @@
 <?php
 /**
+ * TODO : Add Documentation by someone who knows about it
  * class to establish a connection to database
  */
 class database

@@ -6,21 +6,21 @@
 require_once('/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/database/class.Database.php');
 
 /**
- * Brainfuck SQL O.o?
+ *
  *
  * Checks if student has is student1
- * SELECT COUNT(snumber1) FROM tbl_partners WHERE tbl_partners.snumber1 = 'Blah' 
+ * SELECT COUNT(snumber1) FROM tbl_partners WHERE tbl_partners.snumber1 = 'x'
  * returns: 0 or more
  *
- * TODO: 
- * - Query: Update snumber1 to value of snumber2 if snumber1 student was snumber1
- * - Query: Update snumber2 to NULL  if student was snumber2
+ * TODO: Query: Update snumber1 to value of snumber2 if snumber1 student was snumber1
+ * TODO: Query: Update snumber2 to NULL  if student was snumber2
  *
  * @author: Bastian
  * @date: 02.09.2016
  */
 
 /**
+ * TODO: Extend over all documentation here.
  * class containing all functions necessary to communicate with the database
  * for the registration process
  *
@@ -57,7 +57,7 @@ class FP_Database extends Database
    *                                        institute =>
    *                                                    semester_half =>
    *                                                                    slots_remaining]
-   *               TODO: Partner is not being counted yet
+   *               TODO: Partner is not being counted yet.
    */
   public function freePlaces($semester) {
     /*
@@ -70,7 +70,7 @@ class FP_Database extends Database
      *
      * @author: Bastian
      * @date: 31.08.2016
-     *
+     *TODO: Documentation of table Join statements. "(Christian einlesen!)"
      */ 
     $stmt_courses = $this->dbFP->prepare(
       "SELECT `institute`, `max_slots`
@@ -82,7 +82,7 @@ class FP_Database extends Database
           && `semester_half`= ? "
     );
 
-    $stmt_courses->bind_param("ssi", $semester, $graduation, $semester_half);
+    $stmt_courses->bind_param("ssi", $semester, $graduation, $semester_half); // defines the ?'s in the above stmt.
     
     $stmt_angebote_remaining = $this->dbFP->prepare("
       SELECT (c.max_slots - COUNT(*)) 
@@ -136,8 +136,8 @@ class FP_Database extends Database
      *
      **********************************************/
     
-
-    $graduation_array = array("BA", "MA", "MAIT", "LA");
+     // TODO: Understand this Part. (Christian)
+    $graduation_array = array("BA", "MA", "MAIT", "LA");    // TODO: LA = Lehr Amt ?
 
     $result = [];
     /*
@@ -147,7 +147,7 @@ class FP_Database extends Database
                                                        freeplaces]
      */
     
-    // loop through abschluss
+    // loop through graduations
     foreach ($graduation_array as $key => $graduation) {
       $result[$graduation] = [];
 
@@ -267,6 +267,7 @@ class FP_Database extends Database
    * @param  array $data       information given by the user:
    *                           hrz, graduation, semester, institute1, institute2
    * @param  string|null $partner_hrz the hrz of the partner or NULL
+   *
    */
   public function setAnmeldung($data, $partner_hrz)
   {      
@@ -277,8 +278,38 @@ class FP_Database extends Database
       (SELECT `course_id` FROM ".$this->configFP['tbl-courses']." WHERE `semester` = ? AND `semester_half` = 0 AND `institute` = ? AND `graduation` = ?), 
       (SELECT `course_id` FROM ".$this->configFP['tbl-courses']." WHERE `semester` = ? AND `semester_half` = 1 AND `institute` = ? AND `graduation` = ?), 
       NOW())");
+      /**
+       * JOIN hier nicht möglich, da tabelle dadurch redundant wird. z.B.:
+       */
 
     // TODO: join instead of double select
+      /** Probably the answer :
+       *
+       *
+       *
+       * (still occuring double counts)
+       * Example:
+       * Institute | course_id1 | course_id2
+       * IAP         1              2
+       * IAP         2              1
+       *
+       * Need to eliminate them.
+       *
+       *         SELECT t1.course_id AS `course_id1` ,t2.course_id AS `course_id2`
+            FROM `tbl_courses`
+            AS t1
+            JOIN `tbl_courses`
+            AS t2
+            ON t1.semester = t2.semester
+            WHERE t1.semester_half != t2.semester_half
+            AND t1.graduation = t2.graduation
+            AND t1.graduation = "BA"
+            AND t1.institute = "IAP"
+            AND t2.Institute = "PI"
+            AND t1.semester = "WS16/17"
+            AND t1.semester_half = 0
+       */
+
     $stmt_partners = $this->dbFP->prepare("INSERT INTO tbl_partners
       VALUES(
       NULL,
