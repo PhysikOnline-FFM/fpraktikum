@@ -6,8 +6,6 @@
  * TODO: check input, farbige Markierung der freien Plätze, automatische Definiation der Institutwahl
  *       styling
  */
-console.log('script is loaded');
-
 var semester = 'WS16/17';
 
 /**
@@ -137,16 +135,20 @@ function checkPartner() {
         switch (response[0]) {
           case "registered":
             note = "<div class='alert alert-info' role='alert'><strong>Nicht möglich!</strong> Diese Person ist bereits registriert.</div>";
+			document.getElementById('submitRegister').disabled = true;
             break;
           case "partner-accept":
           case "partner-accepted":
             note = "<div class='alert alert-info' role='alert'><strong>Zu spät!</strong> Diese Person ist bereits als Partner hinzugefügt worden.</div>";
+			document.getElementById('submitRegister').disabled = true;
             break;
           case false:
             note = "<div class='alert alert-success' role='alert'><strong>Super!</strong> Person existiert.</div>";
+			document.getElementById('submitRegister').disabled = false;
             break;
           default:
             note = "<div class='alert alert-warning' role='alert'><strong>Vertippt?</strong> Person wurde nicht gefunden.</div>";
+			document.getElementById('submitRegister').disabled = true;
         }
         
         document.getElementById('partner-correct').innerHTML = note;
