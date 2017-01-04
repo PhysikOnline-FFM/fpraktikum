@@ -285,6 +285,8 @@ class FP_Database extends Database
     // TODO: join instead of double select
       /** Probably the answer :
        *
+       *
+       *
        * (still occuring double counts)
        * Example:
        * Institute | course_id1 | course_id2
