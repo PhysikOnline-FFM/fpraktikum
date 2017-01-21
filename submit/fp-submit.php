@@ -6,14 +6,13 @@
  * check all error-states
  * check logical issues
  */ 
-print_r('Its me, ...');
-echo '<h1>Test</h1>';
+
  ini_set('E_ALL',1);
- echo '<h1>Test</h1>';
+
  ini_set('display_errors', 1);
- echo '<h1>Test</h1>';
+
  require '/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/database/class.FP-Database.php';
- echo '<h1>Test</h1>';
+
 /**
  * script checks input from user and writes registration to db
  * 
@@ -27,20 +26,22 @@ $data = [														// saves form-input data of student
   "institute1" => $_POST['institute1'],
   "institute2" => $_POST['institute2']
 ];
-print_r($data);
+
 $wantsPartner = false;
-$partner_hrz = $_POST['partner-hrz'];
-$partner_name = $_POST['partner-name'];
+$partner_hrz = NULL ;
+$partner_name = NULL ;
 $error = [];													// stores errors of formular-input
 $fp_database = new FP_Database();								// initializes db-connection
-$remaining_places = 0;											// stores remaining slots for students
+$remaining_places = $fp_database->freePlaces($data['semester']);// stores remaining slots for students
 $slots_needed = 1;
 
-if($_POST['check-partner'] == "on"){ print_r('yammi'); $wantsPartner = true; } else { $wantsPartner = false; }	// stores boolean of checkbox: true if student wants partner
-print_r("LOL");
+if(isset($_POST['check-partner'])){ $wantsPartner = true; } else { $wantsPartner = false; }	// stores boolean of checkbox: true if student wants partner
+
 if ($wantsPartner) {
-	$slots_needed = 2;													// if student set checkbox, student wants partner
-	$remaining_places = $fp_database->freePlaces($data['semester']);	// stores remaining places
+    $partner_hrz = $_POST['partner-hrz'];
+    $partner_name = $_POST['partner-name'];
+    $slots_needed = 2;													// if student set checkbox, student wants partner
+		// stores remaining places
 	if($data['hrz'] == $_POST['partner-hrz'])							// if partner-hrz is same as logged in user, forward to origin page
 	{
 		// TODO: die(), emit error to user to tell him it is not possible to partner himself.
@@ -63,7 +64,7 @@ if ($fp_database->checkUser($data['hrz'], $data['semester'])[0] != false) {
 }
 print_r('here');
 // check if partner is valid
-if ($partner) {
+if ($wantsPartner) {
   if ($fp_database->checkPartner($partner_hrz, $partner_name, $data['semester'])[0] != false) {
     array_push($error, "Dein angebener Partner konnte nicht gefunden werden, bitte gehe wieder zum ".$Anmeldeformular." zurück");
   }
@@ -102,9 +103,12 @@ if ($error != []) {
 	if (!$fp_database->setAnmeldung($data, $partner_db)) {
 	  die('Es ist ein Fehler beim Speichern deiner Daten aufgetreten.');
 	}
-	//header('Location: http://5-1.ilias.physikelearning.de/goto_FB13-PhysikOnline_cat_11819.html');
+	else {
+        header('Location: http://5-1.ilias.physikelearning.de/goto_FB13-PhysikOnline_cat_11819.html');
+    }
+
 }
-print_r('Mario!');
+
 ?>
 
 <!--Deine Daten wurden erfolgreich gespeichert!-->

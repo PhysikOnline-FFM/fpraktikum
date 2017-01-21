@@ -9,22 +9,24 @@
 //ini_set('display_errors', 1);
 
 require_once('/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/database/class.FP-Database.php');
+require_once('/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/class.helper.php');
 
-if ($_GET['task'])
+if ( $_GET['task'] )
 {
-  $task = $_GET['task'];
-  $hrz = $_GET['hrz'];
-  $name = $_GET['name'];
-  $semester = $_GET['semester'];
+    $task = $_GET['task'];
+    $hrz = $_GET['hrz'];
+    $name = $_GET['name'];
+    $semester = Helper::get_semester();
 
-  $fp_database = new FP_Database();
+    $fp_database = new FP_Database();
 
-  switch ($task) {
-    case 'freePlaces':
-      echo json_encode($fp_database->freePlaces($semester)); // find a better way to get semester
-      break;
-    case 'partner':
-      echo json_encode($fp_database->checkPartner($hrz, $name, $semester));
-      break;
-  }  
+    switch ( $task )
+    {
+        case 'freePlaces':
+            echo json_encode( $fp_database->freePlaces( $semester ) );
+            break;
+        case 'partner':
+            echo json_encode( $fp_database->checkPartner( $hrz, $name, $semester ) );
+            break;
+    }
 }

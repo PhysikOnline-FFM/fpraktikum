@@ -1,5 +1,5 @@
 # Anmeldemaske für das FPraktikum
-Dateien liegen im Rootverzeichnis des Webservers unter `Customizing/global/include/fpraktikum/`. Erreichbar (momentan) über http://4-3.ilias.physikelearning.de/goto.php?target=cat_11819&client_id=FB13-PhysikOnline
+Dateien liegen im Rootverzeichnis des Webservers unter `Customizing/global/include/fpraktikum/`. Erreichbar (momentan) über http://5-1.ilias.physikelearning.de/goto.php?target=cat_11819&client_id=FB13-PhysikOnline
 
 	|--database
 	|  |--class.Database.php	# main class for database
