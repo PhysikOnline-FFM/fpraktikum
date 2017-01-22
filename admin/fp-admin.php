@@ -2,15 +2,51 @@
 
 /**
  * an admin interface to add new courses
- * TODO: show registered users
+ * TODO: this is quite messy
  */
 
-//error_reporting(E_ALL);
-//ini_set('display_errors', 1);
+//error_reporting( E_ALL );
+//ini_set( 'display_errors', 1 );
 
 require '/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/database/class.FP-Database.php';
+require '/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/admin/class.exporter.php';
 
 $fp_database = new FP_Database();
+
+/**
+ * Exports registrations as a plain text file.
+ * See end of file for the "export" button.
+ * @author Lars Gröber
+ * @date   22.01.2017
+ */
+if ( $_POST["export"] && $_POST["semester"] )
+{
+    $semester = $_POST["semester"];
+
+    echo "# This file was automatically exported on " . date( "d.m.o G:i" ) .".\n";
+    //$path = "/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/admin/test.dat";
+    $path = "/tmp/fp_" . str_replace( "/", "", $semester ) ."_anmeldungen.dat";
+
+    $exporter = new Exporter();
+
+    $exporter->init( $fp_database->getAllAnmeldungen( $semester ) );
+    $exporter->setHead( [ "HRZ1", "HRZ2", "Studiengang", "Institut1", "Institut2", "Anmeldezeitpunkt" ] );
+
+    if ( $exporter->create_plain_file( $path ) != 0 )
+    {
+        echo "<p>Something went wrong writing to the file!</p>";
+        exit();
+    }
+
+    // set headers -> document will be downloaded as a plain text file automatically
+    header( 'Content-Type: text/plain' );
+    header( "Content-Transfer-Encoding: Binary" );
+    header( "Content-disposition: attachment; filename=\"" . basename( $path ) . "\"" );
+
+    readfile( $path );
+
+    exit();
+}
 
 ?>
 
@@ -178,6 +214,11 @@ if ( $_POST['semester'] )
         echo "</tr>";
     }
     echo "</table>";
+
+    // add export button
+    echo "<form action='#' method='post'>
+            <input type='submit' name='export' value='Export'>
+            <input hidden name='semester' value='" . $semester . "'>
+          </form>";
 }
 
-  

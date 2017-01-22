@@ -26,7 +26,7 @@ require_once('/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/gl
  *
  * @author LG, BK
  */
-class FP_Database extends Database
+class FP_Database
 {
     public function __construct ()
     {
