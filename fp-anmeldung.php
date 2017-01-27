@@ -1,9 +1,17 @@
 <?php
 
+/*
+ * We call the person who registered him/herself as the 'registrar'
+ * and the person who got registered by him/her as the 'partner'.
+ */
+
 require '/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/database/class.FP-Database.php';
 require '/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/class.helper.php';
 // require 'class.FP-Database.php';                // only used for local modifications on Pc (Christian Grossmueller)
 // require 'class.Database.php';                   // comment it out if used on server
+
+//error_reporting( E_ALL );
+//ini_set( 'display_errors', 1 );
 
 global $ilUser;
 
@@ -20,15 +28,14 @@ $user = $fp_database->checkUser( $user_login, $semester );    // Variable contai
 
 /**
  * Switch to evaluate the different types of user statuses.
- * Statuses : default , registered, partner accept, partner accepted
- * default : shows the standart html mask of the site and is equivalent to 'not registered' saved as the variable $html
- * registered : shows a html mask containing all infos about the registration , degree , etc. saved as $html
- * partner accept: shows a html mask containing the info that someone else has added the user as partner
- * the user gets the chance to see who added him to which group and too accept his partner. TODO
- * !!!TODO partner accepted : TODO!!!
- *
+ * Statuses :           default , registered, partner accept, partner accepted
+ * default :            shows the standard html mask of the site and is equivalent to 'not registered' saved as the variable $html
+ * registered :         shows a html mask containing all infos about the registration , degree , etc. saved as $html
+ * partner-open:        shows a html mask containing the info that someone else has added the user as partner
+ *                      the user gets the chance to see who added him to which group and too accept his partner.
+ * partner-accepted:    the partner has accepted, sees all information and can remove themself
  */
-switch ( $user[0] )
+switch ( $user['type'] )
 {
     default:
         $html = "
@@ -46,7 +53,7 @@ switch ( $user[0] )
 				</div>
 				<p>Wenn du bei der Anmeldung auf Probleme stößst, zögere nicht uns an <a href='mailto:team@elearning.physik.uni-frankfurt.de'>schreiben</a>.</p>
 				
-				<input type='hidden' name='hrz' value='" . $user_login . "'>
+				<input type='hidden' name='registrant' value='" . $user_login . "'>
 				<input type='hidden' name='semester' value='" . $semester . "'>
 				
 				<div class='form-group'>
@@ -88,8 +95,10 @@ switch ( $user[0] )
 	</div>
     ";
         break;
+
     case 'registered':
         $data = $fp_database->getAnmeldung( $user_login, $semester );
+
         $html = "
 	<div class='panel panel-default' style='background-color: white; border: 2px solid #b9b9b9'>
 		<div class='panel-heading' style='background-color: #b9b9b9;'>
@@ -97,8 +106,8 @@ switch ( $user[0] )
 		</div>
 		<div class='panel-body' >
 			<form action='/Customizing/global/include/fpraktikum/submit/fp-abmeldung.php' method='post' class='form-horizontal'>
-				<input type='hidden' name='hrz' value='" . $user_login . "'>
-				<input type='hidden' name='graduation' value='" . $semester . "'>
+				<input type='hidden' name='registrant' value='" . $user_login . "'>
+				<input type='hidden' name='semester' value='" . $semester . "'>
 				<div class='alert alert-success' role='alert'><strong>Schau mal!</strong> Du bist angemeldet.</div>
 				
 				<p>Dies sind die Informationen, die in der Datenbank gespeichert sind:</p>
@@ -129,13 +138,13 @@ switch ( $user[0] )
 				<div class='form-group'>	
 					<label class='col-sm-4 col-md-3 col-lg-2 control-label'>1.&nbsp;Semesterhälfte</label>
 					<div class='col-sm-8 col-md-9 col-lg-10'>
-						<span class='form-control-static'>" . $data['institute0'] . "</span>
+						<span class='form-control-static'>" . $data['institute1'] . "</span>
 					</div>
 				</div>
 				<div class='form-group'>	
 					<label class='col-sm-4 col-md-3 col-lg-2 control-label'>2.&nbsp;Semesterhälfte</label>
 					<div class='col-sm-8 col-md-9 col-lg-10'>
-						<span class='form-control-static'>" . $data['institute1'] . "</span>
+						<span class='form-control-static'>" . $data['institute2'] . "</span>
 					</div>
 				</div>
 				<div class='form-group'>	
@@ -152,7 +161,7 @@ switch ( $user[0] )
         break;
     case 'partner-accept':
         // data about user that included partner
-        $data = $fp_database->getAnmeldung( $user[1], $semester );
+        $data = $fp_database->getAnmeldung( $user['registrant'], $semester );
 
         $html =
             "<div class='panel panel-default' style='background-color: white; border: 2px solid #b9b9b9'>
@@ -161,31 +170,98 @@ switch ( $user[0] )
 		</div>
 		<div class='panel-body' >
 			<p>Du wurdest von jemandem als Partner angegeben:</p>
-			<form action='fehltnoch' method='post'>
+			<form action='/Customizing/global/include/fpraktikum/submit/fp-partner-anmeldung.php' method='post'>
 			  <p>Die Daten deines Partners sind:</p>
-			  <p>HRZ: " . $data['hrz'] . "</p>
+			  <p>HRZ: " . $user[1] . "</p>
 			  <p>Abschluss: " . $data['graduation'] . "</p>
-			  <p>Institut1: " . $data['institut1'] . "</p>
-			  <p>Institut2: " . $data['institut2'] . "</p>      
+			  <p>Institut1: " . $data['institute1'] . "</p>
+			  <p>Institut2: " . $data['institute2'] . "</p>      
 
-			  <p>Hier kannst du dich eintragen:</p>
 			  <p>Deine Daten:</p>
 
-			  <input type='hidden' name='hrz' value='" . $user_login . "'>
+			  <input type='hidden' name='registrant' value='" . $user_login . "'>
 			  <input type='hidden' name='semester' value='" . $semester . "'>
-			  <input type='hidden' name='institut1' value='" . $data['institut1'] . "'>
-			  <input type='hidden' name='institut2' value='" . $data['institut2'] . "'>
+			  <input type='hidden' name='institute1' value='" . $data['institute1'] . "'>
+			  <input type='hidden' name='institute2' value='" . $data['institute2'] . "'>
 
 			  <p>Login: " . $user_login . "</p>
 			  <p>semester: " . $semester . "<br>
 
+			  <p>Hier kannst du dich eintragen:</p>
 			  <input type='submit' name='partner-bestätigen' value='Anmelden'>
-			</form>
+			  </form>
+			    <form action='/Customizing/global/include/fpraktikum/submit/fp-abmeldung.php' method='post'>
+			      <input type='hidden' name='registrant' value='" . $user_login . "'>
+                  <input type='hidden' name='semester' value='" . $semester . "'>
+                  <input type='hidden' name='institute1' value='" . $data['institute1'] . "'>
+                  <input type='hidden' name='institute2' value='" . $data['institute2'] . "'>
+			    <input type='submit' name='partner-denies' value='Abmelden'>
+			  </form>
 		</div>
 	</div>";
         break;
     case 'partner-accepted':
-        // TODO show message that user is partner of x
+        // data about user that included partner
+        $data_registrant = $fp_database->getAnmeldung( $user['registrant'], $semester );
+
+        $html="<div class='panel panel-default' style='background-color: white; border: 2px solid #b9b9b9'>
+		<div class='panel-heading' style='background-color: #b9b9b9;'>
+			Anmeldung zum Fortgeschrittenen Praktikum 
+		</div>
+		<div class='panel-body' >
+			<form action='/Customizing/global/include/fpraktikum/submit/fp-abmeldung.php' method='post' class='form-horizontal'>
+				<input type='hidden' name='registrant' value='" . $user_login . "'>
+				<input type='hidden' name='semester' value='" . $semester . "'>
+				<div class='alert alert-success' role='alert'><strong>Schau mal!</strong> Du bist als Partner angemeldet.</div>
+				
+				<p>Dies sind die Informationen, die in der Datenbank gespeichert sind:</p>
+				<div class='form-group'>
+					<label class='col-sm-4 col-md-3 col-lg-2 control-label'>Benutzername</label>
+					<div class='col-sm-8 col-md-9 col-lg-10'>
+						<span class='form-control-static'>" . $user_login . "</span>
+					</div>
+				</div>
+				<div class='form-group'>
+					<label class='col-sm-4 col-md-3 col-lg-2 control-label'>Studiengang</label>
+					<div class='col-sm-8 col-md-9 col-lg-10'>
+						<span class='form-control-static'>" . $data_registrant['graduation'] . "</span>
+					</div>
+				</div>
+				<div class='form-group'>	
+					<label class='col-sm-4 col-md-3 col-lg-2 control-label'>Partner (Benutzername)</label>
+					<div class='col-sm-8 col-md-9 col-lg-10'>
+						<span class='form-control-static'>" . $user[1] . "</span>
+					</div>
+				</div>
+				<div class='form-group'>	
+					<label class='col-sm-4 col-md-3 col-lg-2 control-label'>Datum</label>
+					<div class='col-sm-8 col-md-9 col-lg-10'>
+						<span class='form-control-static'>" . $data_registrant['register_date'] . "</span>
+					</div>
+				</div>
+				<div class='form-group'>	
+					<label class='col-sm-4 col-md-3 col-lg-2 control-label'>1.&nbsp;Semesterhälfte</label>
+					<div class='col-sm-8 col-md-9 col-lg-10'>
+						<span class='form-control-static'>" . $data_registrant['institute1'] . "</span>
+					</div>
+				</div>
+				<div class='form-group'>	
+					<label class='col-sm-4 col-md-3 col-lg-2 control-label'>2.&nbsp;Semesterhälfte</label>
+					<div class='col-sm-8 col-md-9 col-lg-10'>
+						<span class='form-control-static'>" . $data_registrant['institute2'] . "</span>
+					</div>
+				</div>
+				<div class='form-group'>	
+					<label class='col-sm-4 col-md-3 col-lg-2 control-label'></label>
+					<div class='col-sm-8 col-md-9 col-lg-10'>
+						<span class='form-control-static'>Hier kannst du dich wieder <button onclick=confirmAbmeldung() type='submit' class='btn btn-danger' name='partner-denies' value='Abmelden'>Abmelden</button></span>
+					</div>
+				</div>
+			</form>
+		</div>
+	</div>
+    <script type='text/javascript' src='/home/elearning-www/public_html/elearning/ilias-5.1//Customizing/global/include/fpraktikum/js/fp-abmeldung.js'></script>
+    ";
         break;
 }
 /**

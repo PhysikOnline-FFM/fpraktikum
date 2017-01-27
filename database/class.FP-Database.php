@@ -87,7 +87,7 @@ class FP_Database
         $stmt_courses->bind_param( "ssi", $semester, $graduation, $semester_half ); // defines the ?'s in the above stmt.
 
         $stmt_angebote_remaining = $this->dbFP->prepare( "
-      SELECT (c.max_slots - COUNT(*)) 
+      SELECT (c.max_slots - COUNT(snumber1 )-COUNT(snumber2)) 
         FROM tbl_registrations AS r
       JOIN tbl_partners AS p
         ON p.registration_id = r.registration_id
@@ -186,38 +186,39 @@ class FP_Database
         $stmt_angebote_remaining->close();
     }
 
-    /**
-     * function to check whether the hrz-number and name can be found in the ILIAS-DB
-     *
-     * @param string $hrz  the partners hrz-account
-     * @param string $name the partners lastname
-     *
-     * @return bool true if user is in ILDB, false if not
-     *              TODO: check whether user is already registered/a partner or even
-     *                    the user online
-     */
-    public function checkPartner ( $hrz, $name, $semester )
-    {
-        $stmt = $this->dbIL->prepare( "SELECT `usr_id` FROM " . $this->configIL['tbl-name'] . " 
-      WHERE `login` = ? && `lastname` = ?" );
-        $stmt->bind_param( "ss", $hrz, $name );
-
-        $stmt->execute();
-        $stmt->bind_result( $usr_id );
-
-        $user = $this->checkUser( $hrz, $semester );
-
-        if ( $stmt->fetch() )
-        {
-            return $user;
-        }
-        else
-        {
-            return false;
-        }
-
-        $stmt->close();
-    }
+    // probably not necessary (replaced by checkuser)
+//    /**
+//     * function to check whether the hrz-number and name can be found in the ILIAS-DB
+//     *
+//     * @param string $hrz  the partners hrz-account
+//     * @param string $name the partners lastname
+//     *
+//     * @return bool true if user is in ILDB, false if not
+//     *              TODO: check whether user is already registered/a partner or even
+//     *                    the user online
+//     */
+//    public function checkPartner ( $hrz, $name, $semester )
+//    {
+//        $stmt = $this->dbIL->prepare( "SELECT `usr_id` FROM " . $this->configIL['tbl-name'] . "
+//      WHERE `login` = ? && `lastname` = ?" );
+//        $stmt->bind_param( "ss", $hrz, $name );
+//
+//        $stmt->execute();
+//        $stmt->bind_result( $usr_id );
+//
+//        $user = $this->checkUser( $hrz, $semester );
+//
+//        if ( $stmt->fetch() )
+//        {
+//            return $user;
+//        }
+//        else
+//        {
+//            return false;
+//        }
+//
+//        $stmt->close();
+//    }
 
 
     /**
@@ -229,6 +230,8 @@ class FP_Database
      * @return array containing at index 0 the type of person ('angemeldet' if
      *               user is registered, 'partner' if user is *only* a partner
      *               and false if user is not in db)
+     *               at index 1 is the hrz number of the partner if user has registered themself
+     *               or the hrz number of the person who registered if user is a partner.
      */
     public function checkUser ( $user_login, $semester )
     {
@@ -240,27 +243,32 @@ class FP_Database
 
         $stmt->bind_param( "sss", $semester, $user_login, $user_login );
         $stmt->execute();
+
+        $snumber1 = "";
+        $snumber2 = "";
+        $isAccepted = 0;
         $stmt->bind_result( $snumber1, $snumber2, $isAccepted );
 
         $stmt->fetch();
         if ( $snumber1 == $user_login )
         {
-            return array( 'registered' );
+            return array( 'type' => 'registered'
+                        , 'partner' => $snumber2 );
         }
         else if ( $snumber2 == $user_login && ! $isAccepted )
         {
-            return array( 'partner-accept', $snumber1 );
+            return array( 'type' => 'partner-open'
+                        , 'registrant' => $snumber1 );
         }
         else if ( $snumber2 == $user_login && $isAccepted )
         {
-            return array( 'partner-accepted' );
+            return array( 'type' => 'partner-accepted'
+                        , 'registrant' => $snumber1 );
         }
         else
         {
             return array( false );
         }
-
-        $stmt->close();
     }
 
     /**
@@ -349,7 +357,7 @@ class FP_Database
         $stmt_registration->bind_param( "ssssss", $data['semester'], $data['institute1'], $data['graduation'],
             $data['semester'], $data['institute2'], $data['graduation'] );
 
-        $stmt_partners->bind_param( "ssssssss", $data['hrz'], $partner_hrz, $data['semester'], $data['institute1'], $data['graduation'], $data['semester'], $data['institute2'], $data['graduation'] );
+        $stmt_partners->bind_param( "ssssssss", $data['registrant'], $partner_hrz, $data['semester'], $data['institute1'], $data['graduation'], $data['semester'], $data['institute2'], $data['graduation'] );
 
         if ( $stmt_registration->execute() && $stmt_partners->execute() )
         {
@@ -361,6 +369,49 @@ class FP_Database
         }
         $stmt_registration->close();
         $stmt_partners->close();
+    }
+
+    /**
+     * This function sets the 'accepted' flag in table 'tbl_partners' for a given partner_hrz.
+     *
+     * @param $partner_hrz string   The HRZ of the partner
+     * @param $semester    string   The current semester.
+     *
+     * @return mixed       int      Error code.
+     */
+    public function setPartnerAccepted ( $partner_hrz, $semester )
+    {
+        $stmt = $this->dbFP->prepare( "UPDATE tbl_partners AS p
+            JOIN tbl_registrations AS r ON p.registration_id = r.registration_id 
+            JOIN tbl_courses AS c ON (r.course_id1 = c.course_id OR r.course_id2 = c.course_id) 
+            SET p.accepted = 1
+            WHERE c.semester = ? AND p.snumber2 = ?" );
+
+        $stmt->bind_param( "ss", $semester, $partner_hrz );
+
+        return $stmt->execute();
+    }
+
+    /**
+     * This function unsets the 'accepted' flag in table 'tbl_partners' for a given partner_hrz
+     * and removes the partner_hrz from the database.
+     *
+     * @param $partner_hrz string   The HRZ of the partner
+     * @param $semester    string   The current semester.
+     *
+     * @return mixed       int      Error code.
+     */
+    public function rmPartner ( $partner_hrz, $semester )
+    {
+        $stmt = $this->dbFP->prepare( "UPDATE tbl_partners AS p
+            JOIN tbl_registrations AS r ON p.registration_id = r.registration_id 
+            JOIN tbl_courses AS c ON (r.course_id1 = c.course_id OR r.course_id2 = c.course_id) 
+            SET p.accepted = 0, p.snumber2 = NULL
+            WHERE c.semester = ? AND p.snumber2 = ?" );
+
+        $stmt->bind_param( "ss", $semester, $partner_hrz );
+
+        return $stmt->execute();
     }
 
     /**
@@ -393,7 +444,7 @@ class FP_Database
             $stmt->bind_result( $snumber2, $isAccepted, $institute, $graduation, $register_date );
             if ( $stmt->fetch() )
             {
-                $data['institute' . $semester_half] = $institute;
+                $data['institute' . ($semester_half +1)] = $institute;
             }
             else
             {
@@ -427,7 +478,7 @@ class FP_Database
         // $stmt = $this->dbFP->prepare("DELETE FROM ".$this->configFP['tbl-anmeldung']."
         //   WHERE `hrz` = ? && `semester` = ?");
 
-        $stmt->bind_param( "s", $data['hrz'] );
+        $stmt->bind_param( "s", $data['registrant'] );
 
         return $stmt->execute();
 
