@@ -98,6 +98,8 @@ function showInstitut(studiengang) {
  */
 function choosePartner(element) {
     var target = document.getElementById('partnerForm');
+
+    document.getElementById('submitRegister').disabled = false;
     if (element.checked) {
         target.innerHTML =
             "<div class='form-group'>" +
@@ -132,17 +134,17 @@ function checkPartner() {
 
                 var note = "";
 
-                switch (response[0]) {
+                switch (response['type']) {
                     case "registered":
                         note = "<div class='alert alert-info' role='alert'><strong>Nicht möglich!</strong> Diese Person ist bereits registriert.</div>";
                         document.getElementById('submitRegister').disabled = true;
                         break;
-                    case "partner-accept":
+                    case "partner-open":
                     case "partner-accepted":
                         note = "<div class='alert alert-info' role='alert'><strong>Zu spät!</strong> Diese Person ist bereits als Partner hinzugefügt worden.</div>";
                         document.getElementById('submitRegister').disabled = true;
                         break;
-                    case false:
+                    case 'new':
                         note = "<div class='alert alert-success' role='alert'><strong>Super!</strong> Person existiert.</div>";
                         document.getElementById('submitRegister').disabled = false;
                         break;
@@ -153,12 +155,11 @@ function checkPartner() {
 
                 document.getElementById('partner-correct').innerHTML = note;
             }
-            ;
         }
         catch (e) {
             alert('Es ist ein Fehler beim Abrufen des Partners aufgetreten: ' + e);
         }
-    }
+    };
     httpRequest.open('GET', './Customizing/global/include/fpraktikum/fp-ajax-request.php?task=partner&hrz=' + hrz + '&name=' + name + '&semester=' + semester);
     httpRequest.send();
 }

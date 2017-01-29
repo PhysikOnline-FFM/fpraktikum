@@ -4,6 +4,7 @@
 //ini_set('display_errors', 1);
 
 require_once('/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/database/class.Database.php');
+require_once ( "/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/class.fp_error.php" );
 
 /**
  *
@@ -72,7 +73,6 @@ class FP_Database
          *
          * @author: Bastian
          * @date: 31.08.2016
-         *TODO: Documentation of table Join statements. "(Christian einlesen!)"
          */
         $stmt_courses = $this->dbFP->prepare(
             "SELECT `institute`, `max_slots`
@@ -138,7 +138,6 @@ class FP_Database
          *
          **********************************************/
 
-        // TODO: Understand this Part. (Christian)
         $graduation_array = array( "BA", "MA", "MAIT", "LA" );    // TODO: LA = Lehr Amt ?
 
         $result = [];
@@ -178,47 +177,42 @@ class FP_Database
                 }
             }
         }
-        // print "<pre>";
-        // print_r($result);
-        // print "</pre>";
-        return $result;
         $stmt_courses->close();
         $stmt_angebote_remaining->close();
+        return $result;
+
     }
 
-    // probably not necessary (replaced by checkuser)
-//    /**
-//     * function to check whether the hrz-number and name can be found in the ILIAS-DB
-//     *
-//     * @param string $hrz  the partners hrz-account
-//     * @param string $name the partners lastname
-//     *
-//     * @return bool true if user is in ILDB, false if not
-//     *              TODO: check whether user is already registered/a partner or even
-//     *                    the user online
-//     */
-//    public function checkPartner ( $hrz, $name, $semester )
-//    {
-//        $stmt = $this->dbIL->prepare( "SELECT `usr_id` FROM " . $this->configIL['tbl-name'] . "
-//      WHERE `login` = ? && `lastname` = ?" );
-//        $stmt->bind_param( "ss", $hrz, $name );
-//
-//        $stmt->execute();
-//        $stmt->bind_result( $usr_id );
-//
-//        $user = $this->checkUser( $hrz, $semester );
-//
-//        if ( $stmt->fetch() )
-//        {
-//            return $user;
-//        }
-//        else
-//        {
-//            return false;
-//        }
-//
-//        $stmt->close();
-//    }
+    /**
+     * function to check whether the hrz-number and name can be found in the ILIAS-DB
+     *
+     * @param string $hrz  the partners hrz-account
+     * @param string $name the partners lastname
+     *
+     * @return array true if user is in ILDB, false if not
+     *              TODO: check whether user is already registered/a partner or even
+     *                    the user online
+     */
+    public function checkPartner ( $hrz, $name, $semester )
+    {
+        $stmt = $this->dbIL->prepare( "SELECT `usr_id` FROM " . $this->configIL['tbl-name'] . "
+      WHERE `login` = ? && `lastname` = ?" );
+        $stmt->bind_param( "ss", $hrz, $name );
+
+        $stmt->execute();
+        $stmt->bind_result( $usr_id );
+
+        $user = $this->checkUser( $hrz, $semester );
+
+        if ( $stmt->fetch() )
+        {
+            return $user;
+        }
+        else
+        {
+            return array( false );
+        }
+    }
 
 
     /**
@@ -252,22 +246,26 @@ class FP_Database
         $stmt->fetch();
         if ( $snumber1 == $user_login )
         {
+            $stmt->close();
             return array( 'type' => 'registered'
                         , 'partner' => $snumber2 );
         }
         else if ( $snumber2 == $user_login && ! $isAccepted )
         {
+            $stmt->close();
             return array( 'type' => 'partner-open'
                         , 'registrant' => $snumber1 );
         }
         else if ( $snumber2 == $user_login && $isAccepted )
         {
+            $stmt->close();
             return array( 'type' => 'partner-accepted'
                         , 'registrant' => $snumber1 );
         }
         else
         {
-            return array( false );
+            $stmt->close();
+            return array( 'type' => 'new' );
         }
     }
 
@@ -286,9 +284,10 @@ class FP_Database
         $stmt->bind_param( "s", $hrz );
         $stmt->execute();
         $stmt->bind_result( $user_id );
-
-        return $stmt->fetch();
+        $check = $stmt->fetch();
         $stmt->close();
+        return $check;
+
     }
 
     ////////// Registration //////////
@@ -299,7 +298,8 @@ class FP_Database
      * @param  array $data              information given by the user:
      *                                  hrz, graduation, semester, institute1, institute2
      * @param  string|null $partner_hrz the hrz of the partner or NULL
-     *
+     * @throws FP_Error                 if queries were not successful
+     * @return bool                     if process was successful
      */
     public function setAnmeldung ( $data, $partner_hrz )
     {
@@ -352,23 +352,33 @@ class FP_Database
                                 `semester_half` = 0 AND `institute` = ? AND `graduation` = ?)
         AND `course_id2` = (SELECT `course_id` FROM " . $this->configFP['tbl-courses'] . " WHERE `semester` = ? AND 
                                 `semester_half` = 1 AND `institute` = ? AND `graduation` = ?)),
-      0)" );
+      0,?)
+        " );
 
         $stmt_registration->bind_param( "ssssss", $data['semester'], $data['institute1'], $data['graduation'],
             $data['semester'], $data['institute2'], $data['graduation'] );
 
-        $stmt_partners->bind_param( "ssssssss", $data['registrant'], $partner_hrz, $data['semester'], $data['institute1'], $data['graduation'], $data['semester'], $data['institute2'], $data['graduation'] );
+        $stmt_partners->bind_param( "sssssssss", $data['registrant'], $partner_hrz, $data['semester'],
+            $data['institute1'], $data['graduation'], $data['semester'], $data['institute2'], $data['graduation'],
+            $data['notes']);
 
-        if ( $stmt_registration->execute() && $stmt_partners->execute() )
+
+        if ( ! $stmt_registration->execute() )
         {
-            return true;
+            throw new Exception( "Database Error: " . $stmt_registration->error );
         }
-        else
+
+        if ( ! $stmt_partners->execute() )
         {
-            die ( "Fehler beim Eintragen der Daten: <br>registration: " . $stmt_registration->error . "<br> partners: " . $stmt_partners->error );
+            throw new FP_Error( "Database Error: " . $stmt_partners->error );
         }
+
+        //die ( "Fehler beim Eintragen der Daten: <br>registration: " . $stmt_registration->error . "<br> partners: " . $stmt_partners->error );
+
         $stmt_registration->close();
         $stmt_partners->close();
+
+        return true;
     }
 
     /**
@@ -388,8 +398,9 @@ class FP_Database
             WHERE c.semester = ? AND p.snumber2 = ?" );
 
         $stmt->bind_param( "ss", $semester, $partner_hrz );
-
-        return $stmt->execute();
+        $execute = $stmt->execute();
+        $stmt->close();
+        return $execute;
     }
 
     /**
@@ -410,8 +421,9 @@ class FP_Database
             WHERE c.semester = ? AND p.snumber2 = ?" );
 
         $stmt->bind_param( "ss", $semester, $partner_hrz );
-
-        return $stmt->execute();
+        $execute = $stmt->execute();
+        $stmt->close();
+        return $execute;
     }
 
     /**
@@ -429,7 +441,7 @@ class FP_Database
           SELECT p.snumber2, p.accepted, c.institute, c.graduation, r.register_date FROM tbl_partners AS p JOIN tbl_registrations as r On p.registration_id = r.registration_id JOIN tbl_courses as c ON r.course_id1 = c.course_id OR r.course_id2 = c.course_id WHERE c.semester_half = 0 AND p.snumber1 = 's123456'
          */
 
-        $stmt = $this->dbFP->prepare( "SELECT p.snumber2, p.accepted, c.institute, c.graduation, r.register_date 
+        $stmt = $this->dbFP->prepare( "SELECT p.snumber2, p.accepted, c.institute, c.graduation, r.register_date,p.notes 
       FROM tbl_partners AS p 
       JOIN tbl_registrations AS r ON p.registration_id = r.registration_id 
       JOIN tbl_courses AS c ON r.course_id1 = c.course_id OR r.course_id2 = c.course_id 
@@ -441,7 +453,7 @@ class FP_Database
         for ( $semester_half = 0; $semester_half <= 1; $semester_half++ )
         {
             $stmt->execute();
-            $stmt->bind_result( $snumber2, $isAccepted, $institute, $graduation, $register_date );
+            $stmt->bind_result( $snumber2, $isAccepted, $institute, $graduation, $register_date, $notes );
             if ( $stmt->fetch() )
             {
                 $data['institute' . ($semester_half +1)] = $institute;
@@ -455,10 +467,9 @@ class FP_Database
         $data['isAccepted'] = $isAccepted;
         $data['graduation'] = $graduation;
         $data['register_date'] = $register_date;
-
-        return $data;
-
+        $data['notes'] = $notes;
         $stmt->close();
+        return $data;
     }
 
     /**
@@ -479,10 +490,11 @@ class FP_Database
         //   WHERE `hrz` = ? && `semester` = ?");
 
         $stmt->bind_param( "s", $data['registrant'] );
-
-        return $stmt->execute();
-
+        $execute = $stmt->execute();
         $stmt->close();
+        return $execute;
+
+
     }
 
     /**
@@ -517,7 +529,7 @@ class FP_Database
                 'date'       => $date
             ) );
         }
-
+        $stmt->close();
         return $data;
     }
 
@@ -537,14 +549,14 @@ class FP_Database
 
         if ( $stmt->execute() )
         {
+            $stmt->close();
             return true;
         }
         else
         {
+            $stmt->close();
             die( 'Fehler beim Eintragen des Angebots.' );
         }
-
-        $stmt->close();
     }
 
     /**
@@ -574,10 +586,10 @@ class FP_Database
                 'max_slots'     => $max_slots
             ) );
         }
-
+        $stmt->close();
         return $result;
 
-        $stmt->close();
+
     }
 
     /**
@@ -593,9 +605,8 @@ class FP_Database
       WHERE `institute` = ? AND `semester` = ? AND `semester_half` = ? AND `graduation` = ?" );
 
         $stmt->bind_param( "ssis", $data['institute'], $data['semester'], $data['semester_half'], $data['graduation'] );
-
-        return $stmt->execute();
-
+        $execute = $stmt->execute();
         $stmt->close();
+        return $execute;
     }
 }

@@ -38,6 +38,7 @@ $user = $fp_database->checkUser( $user_login, $semester );    // Variable contai
 switch ( $user['type'] )
 {
     default:
+    case 'new':
         $html = "
 	<div class='panel panel-default' style='background-color: white; border: 2px solid #b9b9b9'>
 		<div class='panel-heading' style='background-color: #b9b9b9;'>
@@ -83,6 +84,13 @@ switch ( $user['type'] )
 						<div id='partnerForm'></div>
 					</div>
 				</div>
+				<div class='form-group'>
+					<label class='col-sm-3 col-md-3 col-lg-2 control-label'>Bemerkungen</label>
+				    <div class='col-sm-9 col-md-9 col-lg-10 checkbox' id='notes'>
+				    <textarea name='notes' rows='5' cols='40'>
+				    </textarea>
+				    </div>
+				</div>	
 				<div class='form-group'>
 					<label class='col-sm-3 col-md-3 col-lg-2 control-label'></label>
 					<div class='col-sm-9 col-md-9 col-lg-10' id='choosePartner'>
@@ -148,6 +156,12 @@ switch ( $user['type'] )
 					</div>
 				</div>
 				<div class='form-group'>	
+					<label class='col-sm-4 col-md-3 col-lg-2 control-label'>Bemerkungen</label>
+					<div class='col-sm-8 col-md-9 col-lg-10'>
+						<span class='form-control-static'>" . $data['notes'] . "</span>
+					</div>
+				</div>
+				<div class='form-group'>	
 					<label class='col-sm-4 col-md-3 col-lg-2 control-label'></label>
 					<div class='col-sm-8 col-md-9 col-lg-10'>
 						<span class='form-control-static'>Hier kannst du dich wieder <button onclick=confirmAbmeldung() type='submit' class='btn btn-danger'>Abmelden</button></span>
@@ -159,7 +173,7 @@ switch ( $user['type'] )
     <script type='text/javascript' src='/home/elearning-www/public_html/elearning/ilias-5.1//Customizing/global/include/fpraktikum/js/fp-abmeldung.js'></script>
     ";
         break;
-    case 'partner-accept':
+    case 'partner-open':
         // data about user that included partner
         $data = $fp_database->getAnmeldung( $user['registrant'], $semester );
 
@@ -172,14 +186,14 @@ switch ( $user['type'] )
 			<p>Du wurdest von jemandem als Partner angegeben:</p>
 			<form action='/Customizing/global/include/fpraktikum/submit/fp-partner-anmeldung.php' method='post'>
 			  <p>Die Daten deines Partners sind:</p>
-			  <p>HRZ: " . $user[1] . "</p>
+			  <p>HRZ: " . $user['registrant'] . "</p>
 			  <p>Abschluss: " . $data['graduation'] . "</p>
-			  <p>Institut1: " . $data['institute1'] . "</p>
-			  <p>Institut2: " . $data['institute2'] . "</p>      
-
+			  <p>Institut 1: " . $data['institute1'] . "</p>
+			  <p>Institut 2: " . $data['institute2'] . "</p>      
+              <p>Bemerkungen:" .$data['notes']."      </p>
 			  <p>Deine Daten:</p>
 
-			  <input type='hidden' name='registrant' value='" . $user_login . "'>
+			  <input type='hidden' name='partner' value='" . $user_login . "'>
 			  <input type='hidden' name='semester' value='" . $semester . "'>
 			  <input type='hidden' name='institute1' value='" . $data['institute1'] . "'>
 			  <input type='hidden' name='institute2' value='" . $data['institute2'] . "'>
@@ -191,7 +205,7 @@ switch ( $user['type'] )
 			  <input type='submit' name='partner-bestätigen' value='Anmelden'>
 			  </form>
 			    <form action='/Customizing/global/include/fpraktikum/submit/fp-abmeldung.php' method='post'>
-			      <input type='hidden' name='registrant' value='" . $user_login . "'>
+			      <input type='hidden' name='partner' value='" . $user_login . "'>
                   <input type='hidden' name='semester' value='" . $semester . "'>
                   <input type='hidden' name='institute1' value='" . $data['institute1'] . "'>
                   <input type='hidden' name='institute2' value='" . $data['institute2'] . "'>
@@ -230,7 +244,7 @@ switch ( $user['type'] )
 				<div class='form-group'>	
 					<label class='col-sm-4 col-md-3 col-lg-2 control-label'>Partner (Benutzername)</label>
 					<div class='col-sm-8 col-md-9 col-lg-10'>
-						<span class='form-control-static'>" . $user[1] . "</span>
+						<span class='form-control-static'>" . $user['registrant'] . "</span>
 					</div>
 				</div>
 				<div class='form-group'>	
@@ -252,11 +266,18 @@ switch ( $user['type'] )
 					</div>
 				</div>
 				<div class='form-group'>	
+					<label class='col-sm-4 col-md-3 col-lg-2 control-label'>Bemerkungen</label>
+					<div class='col-sm-8 col-md-9 col-lg-10'>
+						<span class='form-control-static'>" . $data['notes'] . "</span>
+					</div>
+				</div>
+				<div class='form-group'>	
 					<label class='col-sm-4 col-md-3 col-lg-2 control-label'></label>
 					<div class='col-sm-8 col-md-9 col-lg-10'>
 						<span class='form-control-static'>Hier kannst du dich wieder <button onclick=confirmAbmeldung() type='submit' class='btn btn-danger' name='partner-denies' value='Abmelden'>Abmelden</button></span>
 					</div>
 				</div>
+				
 			</form>
 		</div>
 	</div>
