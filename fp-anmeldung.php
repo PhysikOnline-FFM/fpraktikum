@@ -47,7 +47,7 @@ switch ( $user['type'] )
 		</div>
 		<div class='panel-body' id='fprakikum_registration'>
 			<small class='text-info bg-info'>Dateien liegen in der VM unter Customizing/global/include/fpraktikum/</small>
-			<form name='registration' action='./Customizing/global/include/fpraktikum/submit/fp-submit.php' method='post' onsubmit='return formValidate()' class='form-horizontal'>
+			<form name='registration' action='./Customizing/global/include/fpraktikum/submit/fp-signin.php' method='post' onsubmit='return formValidate()' class='form-horizontal'>
 				<p class=''>Hi " . $user_firstname . ", <br />hier kannst du dich für das Fortgeschrittenen Praktikum im " . $semester . " anmelden.</p>
 				<div id='demo' class='collapse text-info bg-info'>
 					Informationen kommen bald.
@@ -94,7 +94,7 @@ switch ( $user['type'] )
 				<div class='form-group'>
 					<label class='col-sm-3 col-md-3 col-lg-2 control-label'></label>
 					<div class='col-sm-9 col-md-9 col-lg-10' id='choosePartner'>
-						<input class='submit btn btn-default'  type='submit' id='submitRegister' value='Anmelden'>
+						<input class='submit btn btn-default'  type='submit' name='submit_register' id='submitRegister' value='Anmelden'>
 					</div>
 				</div>
 				</form>
@@ -113,7 +113,7 @@ switch ( $user['type'] )
 			Anmeldung zum Fortgeschrittenen Praktikum 
 		</div>
 		<div class='panel-body' >
-			<form action='/Customizing/global/include/fpraktikum/submit/fp-abmeldung.php' method='post' class='form-horizontal'>
+			<form action='/Customizing/global/include/fpraktikum/submit/fp-signout.php' method='post' class='form-horizontal'>
 				<input type='hidden' name='registrant' value='" . $user_login . "'>
 				<input type='hidden' name='semester' value='" . $semester . "'>
 				<div class='alert alert-success' role='alert'><strong>Schau mal!</strong> Du bist angemeldet.</div>
@@ -164,7 +164,7 @@ switch ( $user['type'] )
 				<div class='form-group'>	
 					<label class='col-sm-4 col-md-3 col-lg-2 control-label'></label>
 					<div class='col-sm-8 col-md-9 col-lg-10'>
-						<span class='form-control-static'>Hier kannst du dich wieder <button onclick=confirmAbmeldung() type='submit' class='btn btn-danger'>Abmelden</button></span>
+						<span class='form-control-static'>Hier kannst du dich wieder <button onclick=confirmAbmeldung() type='submit' name='submit_signout' class='btn btn-danger'>Abmelden</button></span>
 					</div>
 				</div>
 			</form>
@@ -184,7 +184,7 @@ switch ( $user['type'] )
 		</div>
 		<div class='panel-body' >
 			<p>Du wurdest von jemandem als Partner angegeben:</p>
-			<form action='/Customizing/global/include/fpraktikum/submit/fp-partner-anmeldung.php' method='post'>
+			<form action='/Customizing/global/include/fpraktikum/submit/fp-signin.php' method='post'>
 			  <p>Die Daten deines Partners sind:</p>
 			  <p>HRZ: " . $user['registrant'] . "</p>
 			  <p>Abschluss: " . $data['graduation'] . "</p>
@@ -202,14 +202,14 @@ switch ( $user['type'] )
 			  <p>semester: " . $semester . "<br>
 
 			  <p>Hier kannst du dich eintragen:</p>
-			  <input type='submit' name='partner-bestätigen' value='Anmelden'>
+			  <input type='submit' name='submit_partner-accepts' value='Anmelden'>
 			  </form>
-			    <form action='/Customizing/global/include/fpraktikum/submit/fp-abmeldung.php' method='post'>
+			    <form action='/Customizing/global/include/fpraktikum/submit/fp-signout.php' method='post'>
 			      <input type='hidden' name='partner' value='" . $user_login . "'>
                   <input type='hidden' name='semester' value='" . $semester . "'>
                   <input type='hidden' name='institute1' value='" . $data['institute1'] . "'>
                   <input type='hidden' name='institute2' value='" . $data['institute2'] . "'>
-			    <input type='submit' name='partner-denies' value='Abmelden'>
+			    <input type='submit' name='submit_partner-denies' value='Abmelden'>
 			  </form>
 		</div>
 	</div>";
@@ -223,7 +223,7 @@ switch ( $user['type'] )
 			Anmeldung zum Fortgeschrittenen Praktikum 
 		</div>
 		<div class='panel-body' >
-			<form action='/Customizing/global/include/fpraktikum/submit/fp-abmeldung.php' method='post' class='form-horizontal'>
+			<form action='/Customizing/global/include/fpraktikum/submit/fp-signout.php' method='post' class='form-horizontal'>
 				<input type='hidden' name='registrant' value='" . $user_login . "'>
 				<input type='hidden' name='semester' value='" . $semester . "'>
 				<div class='alert alert-success' role='alert'><strong>Schau mal!</strong> Du bist als Partner angemeldet.</div>

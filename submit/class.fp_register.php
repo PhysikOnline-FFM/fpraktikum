@@ -3,6 +3,17 @@
 require_once ( "../database/class.FP-Database.php" );
 require_once ( "../class.fp_error.php" );
 
+/**
+ * Class Register. Is used to do all registration processes.
+ * It can:
+ *      sign up a user
+ *      sign up a partner
+ *      delete the registration of a user
+ *      delete the registration of a partner
+ *
+ * @date January 2017
+ * @author Lars Gröber
+ */
 class Register
 {
     private $fp_database;
@@ -13,12 +24,20 @@ class Register
     private $semester;
     private $graduation;
     private $error = [];
+    private $error_bit = false;
 
     public function __construct ()
     {
         $this->fp_database = new FP_Database();
     }
 
+    /**
+     * Function registers a user with and w/o a partner
+     * @param $data         array   Data array needed by fp_database->setAnmeldung
+     * @param null $partner
+     *
+     * @return bool
+     */
     public function signUp_registrant ( $data, $partner = NULL )
     {
         $this->error = [];
@@ -74,6 +93,7 @@ class Register
 
             if ( $this->error != [] )
             {
+                $this->error_bit = true;
                 return false;
             }
 
@@ -83,11 +103,13 @@ class Register
         catch ( FP_Error $error )
         {
             array_push( $this->error, $error );
+            $this->error_bit = true;
             return false;
         }
         catch ( Exception $error )
         {
             array_push( $this->error, $error );
+            $this->error_bit = true;
             return false;
         }
 
@@ -128,6 +150,7 @@ class Register
 
             if ( $this->error != [] )
             {
+                $this->error_bit = true;
                 return false;
             }
 
@@ -136,11 +159,13 @@ class Register
         catch ( FP_Error $error )
         {
             array_push( $this->error, $error );
+            $this->error_bit = true;
             return false;
         }
         catch ( Exception $error )
         {
             array_push( $this->error, $error );
+            $this->error_bit = true;
             return false;
         }
 
@@ -170,6 +195,7 @@ class Register
 
             if ( $this->error != [] )
             {
+                $this->error_bit = true;
                 return false;
             }
 
@@ -178,11 +204,61 @@ class Register
         catch ( FP_Error $error )
         {
             array_push( $this->error, $error );
+            $this->error_bit = true;
             return false;
         }
         catch ( Exception $error )
         {
             array_push( $this->error, $error );
+            $this->error_bit = true;
+            return false;
+        }
+
+        return true;
+    }
+
+    public function partnerDenies ( $partner, $semester )
+    {
+        try
+        {
+            if ( (! $partner) || (! $semester) )
+            {
+                array_push( $this->error, "Deine HRZ Nummer oder das aktuelle Semester konnte nicht richtig übermittelt werden." );
+            }
+            else
+            {
+                $this->partner = $partner;
+                $this->semester = $semester;
+
+                if ( ! $this->is_user_type_of( $this->partner, 'partner-open' ) )
+                {
+                    array_push( $this->error, "Du bist bereits angemeldet oder wurdest nicht als Partner hinzugefügt." );
+                }
+
+                if ( ! $this->check_user( $this->partner ) )
+                {
+                    array_push( $this->error, "Wir konnten dich mit '" . $this->partner . "' nicht in der Datenbank finden." );
+                }
+            }
+
+            if ( $this->error != [] )
+            {
+                $this->error_bit = true;
+                return false;
+            }
+
+            $this->fp_database->rmPartner( $this->partner, $this->semester );
+        }
+        catch ( FP_Error $error )
+        {
+            array_push( $this->error, $error );
+            $this->error_bit = true;
+            return false;
+        }
+        catch ( Exception $error )
+        {
+            array_push( $this->error, $error );
+            $this->error_bit = true;
             return false;
         }
 
@@ -195,6 +271,14 @@ class Register
     public function getError ()
     {
         return $this->error;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isErrorBit ()
+    {
+        return $this->error_bit;
     }
 
     /**
@@ -242,7 +326,7 @@ class Register
     }
 
     /**
-     * Function checks if in both institutes are enough places.
+     * Function checks if there are enough places in both institutes.
      * @return bool
      */
     private function check_free_places ()

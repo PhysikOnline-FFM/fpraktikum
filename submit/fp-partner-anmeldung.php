@@ -1,5 +1,9 @@
 <?php
 
+/*
+ * This file is not needed anymore (fp-signin.php does all the work)!
+ */
+
 /**
  * script checks input from user and writes registration to db
  * TODO: mehr checks siehe unten
@@ -7,7 +11,7 @@
  */
 //error_reporting(E_ALL);
 //ini_set('display_errors', 1);
-
+/*
 require_once ( "class.fp_register.php" );
 
 $data = [
