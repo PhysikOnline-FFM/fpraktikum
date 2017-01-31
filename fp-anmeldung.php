@@ -87,8 +87,7 @@ switch ( $user['type'] )
 				<div class='form-group'>
 					<label class='col-sm-3 col-md-3 col-lg-2 control-label'>Bemerkungen</label>
 				    <div class='col-sm-9 col-md-9 col-lg-10 checkbox' id='notes'>
-				    <textarea name='notes' rows='5' cols='40'>
-				    </textarea>
+				    <textarea name='notes' rows='5' cols='40'> </textarea>
 				    </div>
 				</div>	
 				<div class='form-group'>
@@ -105,7 +104,7 @@ switch ( $user['type'] )
         break;
 
     case 'registered':
-        $data = $fp_database->getAnmeldung( $user_login, $semester );
+        $data = $fp_database->getRegistration( $user_login, $semester );
 
         $html = "
 	<div class='panel panel-default' style='background-color: white; border: 2px solid #b9b9b9'>
@@ -175,7 +174,7 @@ switch ( $user['type'] )
         break;
     case 'partner-open':
         // data about user that included partner
-        $data = $fp_database->getAnmeldung( $user['registrant'], $semester );
+        $data = $fp_database->getRegistration( $user['registrant'], $semester );
 
         $html =
             "<div class='panel panel-default' style='background-color: white; border: 2px solid #b9b9b9'>
@@ -216,7 +215,7 @@ switch ( $user['type'] )
         break;
     case 'partner-accepted':
         // data about user that included partner
-        $data_registrant = $fp_database->getAnmeldung( $user['registrant'], $semester );
+        $data_registrant = $fp_database->getRegistration( $user['registrant'], $semester );
 
         $html="<div class='panel panel-default' style='background-color: white; border: 2px solid #b9b9b9'>
 		<div class='panel-heading' style='background-color: #b9b9b9;'>

@@ -29,7 +29,7 @@ if ( $_POST["export"] && $_POST["semester"] )
 
     $exporter = new Exporter();
 
-    $exporter->init( $fp_database->getAllAnmeldungen( $semester ) );
+    $exporter->init( $fp_database->getAllRegistrations( $semester ) );
     $exporter->setHead( [ "HRZ1", "HRZ2", "Studiengang", "Institut1", "Institut2", "Anmeldezeitpunkt" ] );
 
     if ( $exporter->create_plain_file( $path ) != 0 )
@@ -81,8 +81,8 @@ if ( $_POST['angebot-hinzufügen'] )
     // for most cases the angebot is the same for both times
     if ( $data['semester_half'] == "both" )
     {
-        if ( $fp_database->setAngebote( $data['institute'], $data['semester'], $data['graduation'], 0, $data['slots'] )
-            && $fp_database->setAngebote( $data['institute'], $data['semester'], $data['graduation'], 1, $data['slots'] )
+        if ( $fp_database->setOffers( $data['institute'], $data['semester'], $data['graduation'], 0, $data['slots'] )
+            && $fp_database->setOffers( $data['institute'], $data['semester'], $data['graduation'], 1, $data['slots'] )
         )
         {
             echo "Das Angebot wurde erfolgreich gespeichert.";
@@ -90,7 +90,7 @@ if ( $_POST['angebot-hinzufügen'] )
     }
     else
     {
-        if ( $fp_database->setAngebote( $data['institute'], $data['semester'], $data['graduation'],
+        if ( $fp_database->setOffers( $data['institute'], $data['semester'], $data['graduation'],
             $data['semester_half'], $data['slots'] )
         )
         {
@@ -109,7 +109,7 @@ if ( $_POST['angebot-löschen'] )
         "semester_half" => $_POST['semester_half']
     ];
 
-    if ( $fp_database->rmAngebot( $data ) )
+    if ( $fp_database->rmOffer( $data ) )
     {
         echo "Eintrag erfolgreich gelöscht";
     }
@@ -121,7 +121,7 @@ if ( $_POST['semester'] )
 
     echo "<p>Hier sind die momentanen Angebote:</p>";
 
-    $angebote = $fp_database->getAngebote( $semester );
+    $angebote = $fp_database->getOffers( $semester );
 
     //var_dump($angebote);
     echo "
@@ -189,7 +189,7 @@ if ( $_POST['semester'] )
     </form>
     <p>Im folgenden werden alle aktuellen Anmeldungen angezeigt:</p>";
 
-    $registrations = $fp_database->getAllAnmeldungen( $semester );
+    $registrations = $fp_database->getAllRegistrations( $semester );
 
     //var_dump($angebote);
     echo "

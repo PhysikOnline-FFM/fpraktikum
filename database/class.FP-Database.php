@@ -4,7 +4,7 @@
 //ini_set('display_errors', 1);
 
 require_once('/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/database/class.Database.php');
-require_once ( "/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/class.fp_error.php" );
+require_once("/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/class.fp_error.php");
 
 /**
  *
@@ -29,23 +29,23 @@ require_once ( "/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/
  */
 class FP_Database
 {
+    private $dbIL;
+    private $dbFP;
+    private $configIL;
+    private $configFP;
+
     public function __construct ()
     {
         $dbConfig = parse_ini_file( '/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/database/private/db-credentials.php', true ) or die( "Can not read ini-file" );
 
-        $configFP = $dbConfig['fpraktikum'];
-        $configIL = $dbConfig['ilias'];
+        $this->configFP = $dbConfig['fpraktikum'];
+        $this->configIL = $dbConfig['ilias'];
 
-        $dbFP = new Database( $configFP['link'], $configFP['username'], $configFP['passwd'], $configFP['dbname'] );
-        $dbIL = new Database( $configIL['link'], $configIL['username'], $configIL['passwd'], $configIL['dbname'] );
+        $this->dbFP = new Database( $this->configFP['link'], $this->configFP['username'], $this->configFP['passwd'], $this->configFP['dbname'] );
+        $this->dbIL = new Database( $this->configIL['link'], $this->configIL['username'], $this->configIL['passwd'], $this->configIL['dbname'] );
 
-        $dbFP->initDb();
-        $dbIL->initDb();
-
-        $this->dbIL = $dbIL;
-        $this->dbFP = $dbFP;
-        $this->configIL = $configIL;
-        $this->configFP = $configFP;
+        $this->dbFP->initDb();
+        $this->dbIL->initDb();
     }
 
     /**
@@ -53,7 +53,7 @@ class FP_Database
      * -> DB call to determine institutes
      *
      * @param string $semester current semester
-     *
+     * @throws FP_Error
      * @return array containing all data about the 'courses'
      *               following: [graduation =>
      *                                        institute =>
@@ -84,9 +84,11 @@ class FP_Database
           && `semester_half`= ? "
         );
 
+        $graduation = "";
+        $semester_half = 0;
         $stmt_courses->bind_param( "ssi", $semester, $graduation, $semester_half ); // defines the ?'s in the above stmt.
 
-        $stmt_angebote_remaining = $this->dbFP->prepare( "
+        $stmt_places_remaining = $this->dbFP->prepare( "
       SELECT (c.max_slots - COUNT(snumber1 )-COUNT(snumber2)) 
         FROM tbl_registrations AS r
       JOIN tbl_partners AS p
@@ -99,17 +101,19 @@ class FP_Database
         AND c.graduation = ?
         AND c.semester_half = ?" );
 
-        $stmt_angebote_remaining->bind_param( "sssi", $institute, $semester, $graduation, $semester_half );
+        $institute = "";
+        $stmt_places_remaining->bind_param( "sssi", $institute, $semester, $graduation, $semester_half );
 
         /**********************************************
          *
          * prepared_state: get remaining places
+         *
          * @author: Bastian
          * @date  : 31.08.2016 18:30
-         * TODO: Testing prepared statement
+         *        TODO: Testing prepared statement
          *
          * PREPARED_STATEMENT: EXAMPLE
-         * $stmt_angebote_remaining = $this->dbFP->prepate("
+         * $stmt_places_remaining = $this->dbFP->prepate("
          * SELECT (c.max_slots - COUNT(*))
          * FROM tbl_registrations AS r
          * JOIN tbl_partners AS p
@@ -156,31 +160,41 @@ class FP_Database
             // loop through semesterhälfte
             for ( $semester_half = 0; $semester_half <= 1; $semester_half++ )
             {
+                $max_slots = 0;
+                $slots_remaining = 0;
 
                 // loop through institut
-                $stmt_courses->execute();
+                if ( ! $stmt_courses->execute() )
+                {
+                    throw new FP_Error( "Database Error in '" . __FUNCTION__ . "()': " . $stmt_courses->error );
+                }
+
                 $stmt_courses->bind_result( $institute, $max_slots );
                 while ( $stmt_courses->fetch() )
                 {
 
                     $stmt_courses->store_result();
 
-                    $stmt_angebote_remaining->execute();
-                    $stmt_angebote_remaining->bind_result( $slots_remaining );
-                    $stmt_angebote_remaining->fetch();
+                    if ( ! $stmt_places_remaining->execute() )
+                    {
+                        throw new FP_Error( "Database Error in '" . __FUNCTION__ . "()': " . $stmt_places_remaining->error );
+                    }
+
+                    $stmt_places_remaining->bind_result( $slots_remaining );
+                    $stmt_places_remaining->fetch();
 
                     $slots_remaining = ($slots_remaining == NULL) ? $max_slots : $slots_remaining;
 
                     $result[$graduation][$institute][$semester_half] = $slots_remaining;
 
-                    $stmt_angebote_remaining->store_result();
+                    $stmt_places_remaining->store_result();
                 }
             }
         }
         $stmt_courses->close();
-        $stmt_angebote_remaining->close();
-        return $result;
+        $stmt_places_remaining->close();
 
+        return $result;
     }
 
     /**
@@ -188,7 +202,7 @@ class FP_Database
      *
      * @param string $hrz  the partners hrz-account
      * @param string $name the partners lastname
-     *
+     * @throws FP_Error
      * @return array true if user is in ILDB, false if not
      *              TODO: check whether user is already registered/a partner or even
      *                    the user online
@@ -199,7 +213,12 @@ class FP_Database
       WHERE `login` = ? && `lastname` = ?" );
         $stmt->bind_param( "ss", $hrz, $name );
 
-        $stmt->execute();
+        if ( ! $stmt->execute() )
+        {
+            throw new FP_Error( "Database Error in '" . __FUNCTION__ . "()': " . $stmt->error );
+        }
+
+        $usr_id = "";
         $stmt->bind_result( $usr_id );
 
         $user = $this->checkUser( $hrz, $semester );
@@ -220,7 +239,7 @@ class FP_Database
      * To check:  is user registered
      *            is user a partner but not accepted
      *            is user a partner and accepted
-     *
+     * @throws FP_Error
      * @return array containing at index 0 the type of person ('angemeldet' if
      *               user is registered, 'partner' if user is *only* a partner
      *               and false if user is not in db)
@@ -236,7 +255,11 @@ class FP_Database
      WHERE `c`.`semester` = ? AND (`p`.`snumber1` = ? OR `p`.`snumber2` = ?)" );
 
         $stmt->bind_param( "sss", $semester, $user_login, $user_login );
-        $stmt->execute();
+
+        if ( ! $stmt->execute() )
+        {
+            throw new FP_Error( "Database Error in '" . __FUNCTION__ . "()': " . $stmt->error );
+        }
 
         $snumber1 = "";
         $snumber2 = "";
@@ -247,24 +270,28 @@ class FP_Database
         if ( $snumber1 == $user_login )
         {
             $stmt->close();
+
             return array( 'type' => 'registered'
-                        , 'partner' => $snumber2 );
+            , 'partner'          => $snumber2 );
         }
         else if ( $snumber2 == $user_login && ! $isAccepted )
         {
             $stmt->close();
+
             return array( 'type' => 'partner-open'
-                        , 'registrant' => $snumber1 );
+            , 'registrant'       => $snumber1 );
         }
         else if ( $snumber2 == $user_login && $isAccepted )
         {
             $stmt->close();
+
             return array( 'type' => 'partner-accepted'
-                        , 'registrant' => $snumber1 );
+            , 'registrant'       => $snumber1 );
         }
         else
         {
             $stmt->close();
+
             return array( 'type' => 'new' );
         }
     }
@@ -273,7 +300,7 @@ class FP_Database
      * function to check whether the users hrz-account is actually in the ilDB
      *
      * @param  string containing the hrz-account of user
-     *
+     * @throws FP_Error
      * @return bool true if user was found, false if not
      */
     public function checkUserInfo ( $hrz )
@@ -282,28 +309,34 @@ class FP_Database
       WHERE `login` = ?" );
 
         $stmt->bind_param( "s", $hrz );
-        $stmt->execute();
+
+        if ( ! $stmt->execute() )
+        {
+            throw new FP_Error( "Database Error in '" . __FUNCTION__ . "()': " . $stmt->error );
+        }
+
+        $user_id = "";
         $stmt->bind_result( $user_id );
         $check = $stmt->fetch();
         $stmt->close();
-        return $check;
 
+        return $check;
     }
 
     ////////// Registration //////////
 
     /**
-     * function to add a new registration to the db
+     * Function to add a new registration to the db.
      *
      * @param  array $data              information given by the user:
      *                                  hrz, graduation, semester, institute1, institute2
      * @param  string|null $partner_hrz the hrz of the partner or NULL
+     *
      * @throws FP_Error                 if queries were not successful
      * @return bool                     if process was successful
      */
-    public function setAnmeldung ( $data, $partner_hrz )
+    public function setRegistration ( $data, $partner_hrz )
     {
-
         $stmt_registration = $this->dbFP->prepare( "INSERT IGNORE INTO " . $this->configFP['tbl-registration'] . " 
       VALUES(
       NULL, 
@@ -360,20 +393,25 @@ class FP_Database
 
         $stmt_partners->bind_param( "sssssssss", $data['registrant'], $partner_hrz, $data['semester'],
             $data['institute1'], $data['graduation'], $data['semester'], $data['institute2'], $data['graduation'],
-            $data['notes']);
+            $data['notes'] );
 
-
+        // if any of both queries fail, throw an error and log everything useful for debugging -> also important
+        // to handle support requests
         if ( ! $stmt_registration->execute() )
         {
-            throw new Exception( "Database Error: " . $stmt_registration->error );
+            Logger::log( "Database Error in '" . __FUNCTION__ . "()' when trying to write tbl_registrations:\n"
+                . "\t" . $stmt_registration->error . "\n\tData: '" . implode( "', '", $data ) . "'\n"
+                . "\tPartner: '" . $partner_hrz . "'", 1 );
+            throw new FP_Error( "Database Error: " . $stmt_registration->error );
         }
 
         if ( ! $stmt_partners->execute() )
         {
+            Logger::log( "Database Error in '" . __FUNCTION__ . "()' when trying to write into tbl_partners:\n"
+                . "\t" . $stmt_partners->error . "\n\tData: '" . implode( ", ", $data ) . "'\n"
+                . "\tPartner: '" . $partner_hrz . "'", 1 );
             throw new FP_Error( "Database Error: " . $stmt_partners->error );
         }
-
-        //die ( "Fehler beim Eintragen der Daten: <br>registration: " . $stmt_registration->error . "<br> partners: " . $stmt_partners->error );
 
         $stmt_registration->close();
         $stmt_partners->close();
@@ -386,8 +424,8 @@ class FP_Database
      *
      * @param $partner_hrz string   The HRZ of the partner
      * @param $semester    string   The current semester.
-     *
-     * @return mixed       int      Error code.
+     * @throws FP_Error
+     * @return true
      */
     public function setPartnerAccepted ( $partner_hrz, $semester )
     {
@@ -398,9 +436,15 @@ class FP_Database
             WHERE c.semester = ? AND p.snumber2 = ?" );
 
         $stmt->bind_param( "ss", $semester, $partner_hrz );
-        $execute = $stmt->execute();
+
+        if ( ! $stmt->execute() )
+        {
+            throw new FP_Error( "Database Error in '" . __FUNCTION__ . "()': " . $stmt->error );
+        }
+
         $stmt->close();
-        return $execute;
+
+        return true;
     }
 
     /**
@@ -409,8 +453,8 @@ class FP_Database
      *
      * @param $partner_hrz string   The HRZ of the partner
      * @param $semester    string   The current semester.
-     *
-     * @return mixed       int      Error code.
+     * @throws FP_Error
+     * @return true
      */
     public function rmPartner ( $partner_hrz, $semester )
     {
@@ -421,46 +465,61 @@ class FP_Database
             WHERE c.semester = ? AND p.snumber2 = ?" );
 
         $stmt->bind_param( "ss", $semester, $partner_hrz );
-        $execute = $stmt->execute();
+        $stmt->execute();
+
+        if ( ! $stmt->execute() )
+        {
+            throw new FP_Error( "Database Error in '" . __FUNCTION__ . "()': " . $stmt->error );
+        }
+
         $stmt->close();
-        return $execute;
+
+        return true;
     }
 
     /**
-     * function to get data about a user
+     * Gunction to get data about a user.
      *
      * @param  string $hrz
      * @param  string $semester
-     *
+     * @throws FP_Error
      * @return array           information found
      */
-    public function getAnmeldung ( $hrz, $semester )
+    public function getRegistration ( $hrz, $semester )
     {
-        /*
-          New query:
-          SELECT p.snumber2, p.accepted, c.institute, c.graduation, r.register_date FROM tbl_partners AS p JOIN tbl_registrations as r On p.registration_id = r.registration_id JOIN tbl_courses as c ON r.course_id1 = c.course_id OR r.course_id2 = c.course_id WHERE c.semester_half = 0 AND p.snumber1 = 's123456'
-         */
-
         $stmt = $this->dbFP->prepare( "SELECT p.snumber2, p.accepted, c.institute, c.graduation, r.register_date,p.notes 
       FROM tbl_partners AS p 
       JOIN tbl_registrations AS r ON p.registration_id = r.registration_id 
       JOIN tbl_courses AS c ON r.course_id1 = c.course_id OR r.course_id2 = c.course_id 
       WHERE c.semester_half = ? AND p.snumber1 = ? AND c.semester = ?" );
 
+        $semester_half = 0;
         $stmt->bind_param( "iss", $semester_half, $hrz, $semester );
 
         $data = [];
+
+        $snumber2 = "";
+        $isAccepted = 0;
+        $institute = "";
+        $graduation = "";
+        $register_date = "";
+        $notes = "";
+
         for ( $semester_half = 0; $semester_half <= 1; $semester_half++ )
         {
-            $stmt->execute();
+            if ( ! $stmt->execute() )
+            {
+                throw new FP_Error( "Database Error in '" . __FUNCTION__ . "()': " . $stmt->error );
+            }
+
             $stmt->bind_result( $snumber2, $isAccepted, $institute, $graduation, $register_date, $notes );
             if ( $stmt->fetch() )
             {
-                $data['institute' . ($semester_half +1)] = $institute;
+                $data['institute' . ($semester_half + 1)] = $institute;
             }
             else
             {
-                die( "Fehler beim Abfragen der Anmeldedaten!" );
+                echo ( "Fehler beim Abfragen der Anmeldedaten!" );
             }
         }
         $data['partner'] = $snumber2;
@@ -469,18 +528,18 @@ class FP_Database
         $data['register_date'] = $register_date;
         $data['notes'] = $notes;
         $stmt->close();
+
         return $data;
     }
 
     /**
-     * function to delete the registration of one user
-     * TODO: Partner
+     * Function to delete the registration of one user.
      *
      * @param  array $data
-     *
-     * @return bool if query was successfull
+     * @throws FP_Error
+     * @return true
      */
-    public function rmAnmeldung ( $data )
+    public function rmRegistration ( $data )
     {
         // TODO: Join with other tables to check for right semester
         $stmt = $this->dbFP->prepare( "
@@ -490,23 +549,27 @@ class FP_Database
         //   WHERE `hrz` = ? && `semester` = ?");
 
         $stmt->bind_param( "s", $data['registrant'] );
-        $execute = $stmt->execute();
+
+        if ( ! $stmt->execute() )
+        {
+            throw new FP_Error( "Database Error in '" . __FUNCTION__ . "()': " . $stmt->error );
+        }
+
         $stmt->close();
-        return $execute;
 
-
+        return true;
     }
 
     /**
-     * get all registrations in DB
+     * Get all registrations in DB.
      *
      * @param  string $semester
-     *
+     * @throws FP_Error
      * @return array
      */
-    public function getAllAnmeldungen ( $semester )
+    public function getAllRegistrations ( $semester )
     {
-        $stmt = $this->dbFP->prepare( "SELECT p.snumber1, p.snumber2, r.register_date, c1.institute, c1.graduation, c2.institute 
+        $stmt = $this->dbFP->prepare( "SELECT p.snumber1, p.snumber2, r.register_date, c1.institute, c1.graduation, c2.institute, p.notes 
       FROM tbl_partners AS p 
       JOIN tbl_registrations AS r ON p.registration_id = r.registration_id 
       JOIN tbl_courses AS c1 ON c1.course_id = r.course_id1 
@@ -514,8 +577,21 @@ class FP_Database
       WHERE c1.semester = ? AND c2.semester = ?" );
 
         $stmt->bind_param( "ss", $semester, $semester );
-        $stmt->execute();
-        $stmt->bind_result( $hrz1, $hrz2, $date, $institute1, $graduation, $institute2 );
+
+        if ( ! $stmt->execute() )
+        {
+            throw new FP_Error( "Database Error in '" . __FUNCTION__ . "()': " . $stmt->error );
+        }
+
+        $hrz1 = "";
+        $hrz2 = "";
+        $date = "";
+        $institute1 = "";
+        $institute2 = "";
+        $graduation = "";
+        $notes = "";
+
+        $stmt->bind_result( $hrz1, $hrz2, $date, $institute1, $graduation, $institute2, $notes );
 
         $data = [];
         while ( $stmt->fetch() )
@@ -526,46 +602,48 @@ class FP_Database
                 'graduation' => $graduation,
                 'institute1' => $institute1,
                 'institute2' => $institute2,
-                'date'       => $date
+                'date'       => $date,
+                'notes'      => $notes
             ) );
         }
         $stmt->close();
+
         return $data;
     }
 
     ////////// Courses //////////
 
     /**
-     * function to add a new course to the db, slots needs to be an integer
-     *
+     * Function to add a new course to the db, slots needs to be an integer.
+     * @throws FP_Error
      * @return bool if query was successfull
      */
-    public function setAngebote ( $institute, $semester, $graduation, $semester_half, $slots )
+    public function setOffers ( $institute, $semester, $graduation, $semester_half, $slots )
     {
         $stmt = $this->dbFP->prepare( "INSERT INTO tbl_courses
       VALUES(NULL, ?, ?, ?, ?, ?)" );
 
         $stmt->bind_param( "ssisi", $institute, $semester, $semester_half, $graduation, $slots );
 
-        if ( $stmt->execute() )
+        if ( ! $stmt->execute() )
         {
-            $stmt->close();
-            return true;
+            throw new FP_Error( "Database Error in '" . __FUNCTION__ . "()': " . $stmt->error );
         }
-        else
-        {
-            $stmt->close();
-            die( 'Fehler beim Eintragen des Angebots.' );
-        }
+
+        $stmt->close();
+
+        return true;
     }
 
     /**
-     * function to reciece an multidim array containing all course data
+     * Function to receive an multidimensional array containing all course data.
      *
+     * @param $semester string  Current semester.
+     * @throws FP_Error
      * @return array containing data about all angebote:
      *               [['institut', 'semester', 'abschluss', 'semesterhaelfte', 'plaetze']]
      */
-    public function getAngebote ( $semester )
+    public function getOffers ( $semester )
     {
 
         $stmt = $this->dbFP->prepare( "SELECT `institute`, `semester_half`, `graduation`, `max_slots` 
@@ -573,7 +651,17 @@ class FP_Database
       ORDER BY `graduation`, `institute`, `semester_half`" );
 
         $stmt->bind_param( "s", $semester );
-        $stmt->execute();
+
+        if ( ! $stmt->execute() )
+        {
+            throw new FP_Error( "Database Error in '" . __FUNCTION__ . "()': " . $stmt->error );
+        }
+
+        $institute = "";
+        $semester_half = 0;
+        $graduation = "";
+        $max_slots = 0;
+
         $stmt->bind_result( $institute, $semester_half, $graduation, $max_slots );
 
         $result = [];
@@ -587,26 +675,61 @@ class FP_Database
             ) );
         }
         $stmt->close();
+
         return $result;
-
-
     }
 
     /**
-     * remove one course from db
+     * Function checks if an offer is valid.
+     * Can be used to check user entries.
+     *
+     * @param $institute
+     * @param $semester
+     * @param $semester_half
+     * @param $graduation
+     *
+     * @return mixed
+     * @throws FP_Error
+     */
+    public function isOffer ( $institute, $semester, $semester_half, $graduation )
+    {
+        $stmt = $this->dbFP->prepare(
+            "SELECT `course_id` 
+             FROM tbl_courses
+             WHERE `institute` = ? AND `semester` = ? AND `semester_half` = ? AND `graduation` = ?"
+        );
+
+        $stmt->bind_param( "ssis", $institute, $semester, $semester_half, $graduation );
+
+        if ( ! $stmt->execute() )
+        {
+            throw new FP_Error( "Database Error in '" . __FUNCTION__ . "()': " . $stmt->error );
+        }
+
+        return $stmt->fetch();
+    }
+
+    /**
+     * Remove one course from db.
      *
      * @param  array $data name of institut, semester, abschluss, semesterhaelfte
-     *
-     * @return bool
+     * @throws FP_Error
+     * @return true
      */
-    public function rmAngebot ( $data )
+    public function rmOffer ( $data )
     {
         $stmt = $this->dbFP->prepare( "DELETE FROM tbl_courses 
       WHERE `institute` = ? AND `semester` = ? AND `semester_half` = ? AND `graduation` = ?" );
 
         $stmt->bind_param( "ssis", $data['institute'], $data['semester'], $data['semester_half'], $data['graduation'] );
-        $execute = $stmt->execute();
+
+        if ( ! $stmt->execute() )
+        {
+            throw new FP_Error( "Database Error in '" . __FUNCTION__ . "()': " . $stmt->error );
+        }
+
         $stmt->close();
-        return $execute;
+
+        return true;
     }
 }

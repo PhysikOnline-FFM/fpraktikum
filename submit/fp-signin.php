@@ -2,6 +2,7 @@
 
 require_once ( "class.fp_register.php" );
 require_once ( "../fp_constants.php" );
+require_once ( "../class.logger.php" );
 
 ini_set( 'E_ALL', 1 );
 ini_set( 'display_errors', 1 );
@@ -67,7 +68,7 @@ if ( $Register->isErrorBit() )
 
 echo '<div class=\"alert alert-danger\" role=\"alert\"><strong>Erfolg:</strong> Deine Daten wurden erfolgreich gespeichert!</p>';
 
-header( "Location: $REGISTRATION_MASK" );
+header( "Location: " . fp_const\REGISTRATION_MASK );
 
 ?>
 

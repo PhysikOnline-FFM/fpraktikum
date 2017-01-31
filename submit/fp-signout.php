@@ -46,4 +46,4 @@ else
     echo '<div class=\"alert alert-danger\" role=\"alert\"><strong>Erfolg:</strong> Du hast dich erfolgreich ausgetragen!</p>';
 }
 
-header( "Location: $REGISTRATION_MASK" );
+header( "Location: " . fp_const\REGISTRATION_MASK );

@@ -35,6 +35,7 @@ class database
 
     /**
      * Initializes database.
+     * @throws
      */
     public function initDb ()
     {
@@ -43,7 +44,7 @@ class database
 
         if ( $this->db->connect_errno )
         {
-            echo "Failed to connect to MySQL database " . $this->dbLink . ": " . $this->db->connect_error;
+            throw new Exception( "Failed to connect to MySQL database " . $this->dbLink . ": " . $this->db->connect_error );
         }
 
         // necessary to use umlaute
@@ -54,7 +55,7 @@ class database
      * Function to prepare a prepared statement.
      *
      * @param $query string     The query which will be executed.
-     *
+     * @throws
      * @return mixed            A prepared statement object.
      */
     public function prepare ( $query )
@@ -63,7 +64,7 @@ class database
 
         if ( ! $stmt )
         {
-            echo "Error preparing statement" . $this->db->error;
+            throw new Exception( "Error preparing statement" . $this->db->error );
         }
 
         return $stmt;

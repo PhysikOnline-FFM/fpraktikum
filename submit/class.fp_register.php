@@ -32,7 +32,8 @@ class Register
     }
 
     /**
-     * Function registers a user with and w/o a partner
+     * Function registers a user with and w/o a partner.
+     *
      * @param $data         array   Data array needed by fp_database->setAnmeldung
      * @param null $partner
      *
@@ -44,19 +45,19 @@ class Register
 
         try
         {
-            if ( ! $this->check_array( $data ) )
+            $this->registrant = $data['registrant'];
+            $this->partner = $partner;
+            $this->institute1 = $data['institute1'];
+            $this->institute2 = $data['institute2'];
+            $this->semester = $data['semester'];
+            $this->graduation = $data['graduation'];
+
+            if ( ($name = $this->check_array( $data )) != "ok" )
             {
-                array_push( $this->error, "Es wurden womöglich nicht alle Felder ausgefüllt." );
+                array_push( $this->error, "Das Feld '" . $name . "' wurde nicht ausgefüllt." );
             }
             else
             {
-                $this->registrant = $data['registrant'];
-                $this->partner = $partner;
-                $this->institute1 = $data['institute1'];
-                $this->institute2 = $data['institute2'];
-                $this->semester = $data['semester'];
-                $this->graduation = $data['graduation'];
-
                 if ( ! $this->is_user_type_of( $this->registrant, 'new' ) )
                 {
                     array_push( $this->error, "Du bist bereits angemeldet oder wurdest als Partner von jemandem anderen hinzugefügt." );
@@ -64,41 +65,51 @@ class Register
 
                 if ( ! $this->check_user( $this->registrant ) )
                 {
-                    array_push( $this->error, "Wir konnten dich nicht mit '" . $this->registrant . "' in der Datenbank finden." );
+                    array_push( $this->error
+                        , "Wir konnten dich mit '" . $this->registrant . "' <strong>nicht</strong> in unserer Datenbank finden." );
                 }
 
                 if ( $this->partner )
                 {
                     if ( ! $this->is_user_type_of( $this->partner, 'new' ) )
                     {
-                        array_push( $this->error, "Dein angebener Partner ist bereits angemeldet." );
+                        array_push( $this->error, "Dein angebener Partner '" . $this->partner . "' ist bereits angemeldet." );
                     }
 
                     if ( ! $this->check_user( $this->partner ) )
                     {
-                        array_push( $this->error, "Wir konnten deinen Partner mit '" . $this->partner . "' nicht in der Datenbank finden." );
+                        array_push( $this->error
+                            , "Wir konnten deinen Partner mit '" . $this->partner . "' <strong>nicht</strong> in der Datenbank finden." );
                     }
                 }
 
+                // TODO: not valid for LA's
                 if ( $this->institute1 == $this->institute2 )
                 {
                     array_push( $this->error, "Bitte wähle zwei verschiedene Institute aus." );
                 }
 
-                if ( ! ($institute = $this->check_free_places()) )
+                if ( ($institute = $this->are_offers_valid()) != "ok" )
                 {
-                    array_push( $this->error, "Leider sind im Institut '" . $institute . "' nicht ausreichend Plätze vorhanden." );
+                    array_push( $this->error, "Leider konnten wir das Institut '" . $institute . "' im Studiengang '"
+                        . $this->graduation . "' und Semester '" . $this->semester . "' <strong>nicht</strong> finden." );
+                }
+
+                if ( ($institute = $this->check_free_places()) != "ok" )
+                {
+                    array_push( $this->error
+                        , "Leider sind im Institut '" . $institute . "' <strong>nicht</strong> ausreichend Plätze vorhanden." );
                 }
             }
 
             if ( $this->error != [] )
             {
+                Logger::log( "There were errors when $this->registrant tried to register: " . implode( " ; ", $this->error ), 1 );
                 $this->error_bit = true;
                 return false;
             }
 
-
-            $this->fp_database->setAnmeldung( $data, $this->partner );
+            $this->fp_database->setRegistration( $data, $this->partner );
         }
         catch ( FP_Error $error )
         {
@@ -112,6 +123,9 @@ class Register
             $this->error_bit = true;
             return false;
         }
+
+        Logger::log( $this->registrant
+            . " has registered with '$this->institute1, $this->institute2, $this->graduation, $this->partner'.", 2 );
 
         return true;
     }
@@ -128,15 +142,15 @@ class Register
 
         try
         {
+            $this->partner = $partner;
+            $this->semester = $semester;
+
             if ( (! $partner) || (! $semester) )
             {
                 array_push( $this->error, "Deine HRZ Nummer oder das aktuelle Semester konnte nicht richtig übermittelt werden." );
             }
             else
             {
-                $this->partner = $partner;
-                $this->semester = $semester;
-
                 if ( ! $this->is_user_type_of( $this->partner, 'partner-open' ) )
                 {
                     array_push( $this->error, "Du bist bereits angemeldet oder wurdest nicht als Partner hinzugefügt." );
@@ -144,12 +158,13 @@ class Register
 
                 if ( ! $this->check_user( $this->partner ) )
                 {
-                    array_push( $this->error, "Wir konnten dich mit '" . $this->partner . "' nicht in der Datenbank finden." );
+                    array_push( $this->error, "Wir konnten dich mit '" . $this->partner . "' nicht in unserer Datenbank finden." );
                 }
             }
 
             if ( $this->error != [] )
             {
+                Logger::log( "There were errors when $this->partner tried to accept: " . implode( " ; ", $this->error ), 1 );
                 $this->error_bit = true;
                 return false;
             }
@@ -169,6 +184,8 @@ class Register
             return false;
         }
 
+        Logger::log( $this->partner . " has registered as a partner.", 2 );
+
         return true;
     }
 
@@ -178,15 +195,15 @@ class Register
 
         try
         {
+            $this->registrant = $registrant;
+            $this->semester = $semester;
+
             if ( ( ! $registrant) || ( ! $semester) )
             {
                 array_push( $this->error, "Deine HRZ Nummer oder das aktuelle Semester konnte nicht richtig übermittelt werden." );
             }
             else
             {
-                $this->registrant = $registrant;
-                $this->semester = $semester;
-
                 if ( $this->is_user_type_of( $this->registrant, false ) )
                 {
                     array_push( $this->error, "Du bist nicht registriert und kannst dich nicht abmelden." );
@@ -195,11 +212,12 @@ class Register
 
             if ( $this->error != [] )
             {
+                Logger::log( "There were errors when $this->registrant tried to sign off: " . implode( " ; ", $this->error ), 1 );
                 $this->error_bit = true;
                 return false;
             }
 
-            $this->fp_database->rmAnmeldung( array( 'registrant' => $this->registrant, 'semester' => $this->semester ) );
+            $this->fp_database->rmRegistration( array( 'registrant' => $this->registrant, 'semester' => $this->semester ) );
         }
         catch ( FP_Error $error )
         {
@@ -214,6 +232,8 @@ class Register
             return false;
         }
 
+        Logger::log( $this->registrant . " has signed off.", 2 );
+
         return true;
     }
 
@@ -221,15 +241,15 @@ class Register
     {
         try
         {
+            $this->partner = $partner;
+            $this->semester = $semester;
+
             if ( (! $partner) || (! $semester) )
             {
                 array_push( $this->error, "Deine HRZ Nummer oder das aktuelle Semester konnte nicht richtig übermittelt werden." );
             }
             else
             {
-                $this->partner = $partner;
-                $this->semester = $semester;
-
                 if ( ! $this->is_user_type_of( $this->partner, 'partner-open' ) )
                 {
                     array_push( $this->error, "Du bist bereits angemeldet oder wurdest nicht als Partner hinzugefügt." );
@@ -237,12 +257,13 @@ class Register
 
                 if ( ! $this->check_user( $this->partner ) )
                 {
-                    array_push( $this->error, "Wir konnten dich mit '" . $this->partner . "' nicht in der Datenbank finden." );
+                    array_push( $this->error, "Wir konnten dich mit '" . $this->partner . "' nicht in unserer Datenbank finden." );
                 }
             }
 
             if ( $this->error != [] )
             {
+                Logger::log( "There were errors when $this->partner tried to deny: " . implode( " ; ", $this->error ), 1 );
                 $this->error_bit = true;
                 return false;
             }
@@ -262,6 +283,8 @@ class Register
             return false;
         }
 
+        Logger::log( $this->partner. " has denied.", 2 );
+
         return true;
     }
 
@@ -274,7 +297,7 @@ class Register
     }
 
     /**
-     * @return bool
+     * @return bool $error_bit
      */
     public function isErrorBit ()
     {
@@ -283,9 +306,13 @@ class Register
 
     /**
      * Function checks if all elements of an array are defined.
+     * Prevents a user to not fill out every element.
+     *
      * @param $data array   The array to check
      *
      * @return bool
+     *
+     * @bug When 'notes' is not filled, this throws an error.
      */
     private function check_array ( $data )
     {
@@ -293,15 +320,16 @@ class Register
         {
             if ( ! $value )
             {
-                return false;
+                return $name;
             }
         }
 
-        return true;
+        return "ok";
     }
 
     /**
      * Function checks if a user is of a specific type.
+     *
      * @param $hrz
      * @param $type
      *
@@ -316,6 +344,8 @@ class Register
 
     /**
      * Function checks if a user can be found in the database.
+     * Prevents an unknown user to log in.
+     *
      * @param $hrz
      *
      * @return bool
@@ -327,6 +357,7 @@ class Register
 
     /**
      * Function checks if there are enough places in both institutes.
+     *
      * @return bool
      */
     private function check_free_places ()
@@ -344,6 +375,26 @@ class Register
             return $this->institute2;
         }
 
-        return true;
+        return "ok";
+    }
+
+    /**
+     * Function checks if both institute-semester-graduation combinations are valid.
+     * Makes sure that nobody can change the institutes/semester/graduation in the form.
+     *
+     * @return string   The faulty institute or "ok".
+     */
+    public function are_offers_valid ()
+    {
+        if ( ! $this->fp_database->isOffer( $this->institute1, $this->semester, 0, $this->graduation ) )
+        {
+            return $this->institute1;
+        }
+        if ( ! $this->fp_database->isOffer( $this->institute2, $this->semester, 1, $this->graduation ) )
+        {
+            return $this->institute2;
+        }
+
+        return "ok";
     }
 }
