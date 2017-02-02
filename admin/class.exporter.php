@@ -71,7 +71,7 @@ class Exporter
         {
             foreach ( $line as $item )
             {
-                fwrite( $file, $item . "\t" );
+                fwrite( $file, htmlspecialchars_decode( $item ) . "\t" );
             }
             fwrite( $file, "\n" );
         }

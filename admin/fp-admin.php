@@ -30,7 +30,7 @@ if ( $_POST["export"] && $_POST["semester"] )
     $exporter = new Exporter();
 
     $exporter->init( $fp_database->getAllRegistrations( $semester ) );
-    $exporter->setHead( [ "HRZ1", "HRZ2", "Studiengang", "Institut1", "Institut2", "Anmeldezeitpunkt" ] );
+    $exporter->setHead( [ "HRZ1", "HRZ2", "Studiengang", "Institut1", "Institut2", "Anmeldezeitpunkt", "Bemerkungen" ] );
 
     if ( $exporter->create_plain_file( $path ) != 0 )
     {
@@ -201,6 +201,7 @@ if ( $_POST['semester'] )
         <th>Institut1</th>
         <th>Institut2</th>
         <th>Anmeldezeitpunkt</th>
+        <th>Bemerkungen</th>
       </tr>";
 
     // listing of all the data

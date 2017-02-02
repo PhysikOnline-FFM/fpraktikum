@@ -15,20 +15,22 @@ error_reporting( E_ALL );
 ini_set( 'display_errors', 1 );
 
 $data = [
-    "registrant" => $_POST['registrant'],
-    "semester"   => $_POST['semester']
+    "registrant" => htmlspecialchars( $_POST['registrant'] ),
+    "semester"   => htmlspecialchars( $_POST['semester'] )
 ];
 
 $Register = new Register();
 $fp_database = new FP_Database();
 
-if ( isset( $_POST['submit_signout'] ) )
+$post_signout = htmlspecialchars( $_POST['submit_signout'] );
+$post_partner_denies = htmlspecialchars( $_POST['submit_partner-denies'] );
+if ( isset( $post_signout ) )
 {
     $Register->signOut( $data['registrant'], $data['semester'] );
 }
-elseif ( isset( $_POST['submit_partner-denies'] ) )
+elseif ( isset( $post_partner_denies ) )
 {
-    $Register->partnerDenies( $_POST['partner'], $data['semester'] );
+    $Register->partnerDenies( htmlspecialchars( $_POST['partner'] ), htmlspecialchars( $data['semester'] ) );
 }
 
 if ( $Register->isErrorBit() )

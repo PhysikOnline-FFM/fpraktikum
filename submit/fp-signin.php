@@ -20,24 +20,27 @@ $Register = new Register();
 /**
  * A user wants to register.
  */
-if ( isset( $_POST['submit_register'] ) )
+$post_register = htmlspecialchars( $_POST['submit_register'] );
+$post_partner_accepts = htmlspecialchars( $_POST['submit_partner-accepts'] );
+if ( isset( $post_register ) )
 {
     // saves form-input data of student
     $data = [
-        "registrant" => $_POST['registrant'],
-        "graduation" => $_POST['graduation'],
-        "semester"   => $_POST['semester'],
-        "institute1" => $_POST['institute1'],
-        "institute2" => $_POST['institute2'],
-        "notes"      => $_POST['notes']
+        "registrant" => htmlspecialchars( $_POST['registrant'] ),
+        "graduation" => htmlspecialchars( $_POST['graduation'] ),
+        "semester"   => htmlspecialchars( $_POST['semester'] ),
+        "institute1" => htmlspecialchars( $_POST['institute1'] ),
+        "institute2" => htmlspecialchars( $_POST['institute2'] ),
+        "notes"      => htmlspecialchars( $_POST['notes'] )
     ];
 
     $partner = NULL;
 
     // check if the user chose a partner
-    if ( isset( $_POST['check-partner'] ) )
+    $post = htmlspecialchars( $_POST['check-partner'] );
+    if ( isset( $post ) )
     {
-        $partner = $_POST['partner-hrz'];
+        $partner = htmlspecialchars( $_POST['partner-hrz'] );
     }
     else
     {
@@ -50,9 +53,9 @@ if ( isset( $_POST['submit_register'] ) )
 /**
  * A partner wants to accept.
  */
-elseif ( isset( $_POST['submit_partner-accepts'] ) )
+elseif ( isset( $post_partner_accepts ) )
 {
-    $Register->signUp_partner( $_POST['partner'], $_POST['semester'] );
+    $Register->signUp_partner( htmlspecialchars( $_POST['partner'] ), htmlspecialchars( $_POST['semester'] ) );
 }
 
 if ( $Register->isErrorBit() )
