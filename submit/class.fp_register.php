@@ -25,7 +25,7 @@ class Register
     private $graduation;
     private $error = [];
     private $error_bit = false;
-
+    private $token;
     public function __construct ()
     {
         $this->fp_database = new FP_Database();
@@ -45,6 +45,7 @@ class Register
 
         try
         {
+            $token = bin2hex(openssl_random_pseudo_bytes(16));
             $this->registrant = $data['registrant'];
             $this->partner = $partner;
             $this->institute1 = $data['institute1'];
@@ -58,6 +59,7 @@ class Register
             }
             else
             {
+
                 if ( ! $this->is_user_type_of( $this->registrant, 'new' ) )
                 {
                     array_push( $this->error, "Du bist bereits angemeldet oder wurdest als Partner von jemandem anderen hinzugefügt." );
@@ -109,7 +111,7 @@ class Register
                 return false;
             }
 
-            $this->fp_database->setRegistration( $data, $this->partner );
+            $this->fp_database->setRegistration( $data, $this->partner,$token );
         }
         catch ( FP_Error $error )
         {
@@ -131,7 +133,7 @@ class Register
     }
 
     /**
-     * Function registers a partner
+     * Function registers a partner if he accepts .
      * @param $partner string   HRZ number of the partner.
      * @param $semester string  Current semester.
      * @return bool             If process was successful.
@@ -195,8 +197,14 @@ class Register
 
         try
         {
+
             $this->registrant = $registrant;
             $this->semester = $semester;
+            $this->token = $_POST['token'];
+            if ($this->check_token(($this->registrant,$this->semester,$this->token))
+            {
+                throw new FP_Error("Securitybreach, your Coumputer is about to be hacked!");
+            }
 
             if ( ( ! $registrant) || ( ! $semester) )
             {
@@ -243,7 +251,11 @@ class Register
         {
             $this->partner = $partner;
             $this->semester = $semester;
-
+            $this->token = $_POST['token'];
+            if ($this->check_token($this->partner,$this->semester,$this->token))
+            {
+                throw new FP_Error("Securitybreach, your Coumputer is about to be hacked!");
+            }
             if ( (! $partner) || (! $semester) )
             {
                 array_push( $this->error, "Deine HRZ Nummer oder das aktuelle Semester konnte nicht richtig übermittelt werden." );
@@ -396,5 +408,10 @@ class Register
         }
 
         return "ok";
+    }
+
+    public function check_token($registrant,$semester,$post_token)
+    {
+        return ($this->fp_database->get_token($registrant,$semester) == $post_token);
     }
 }

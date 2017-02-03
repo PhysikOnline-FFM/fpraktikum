@@ -19,6 +19,7 @@ $user_firstname = $ilUser->getFirstname();      // $ilUser is a ILLias system va
 $user_lastname = $ilUser->getLastname();        // fetches Lastname
 $user_login = $ilUser->getLogin();              // fetches logindata
 
+
 $semester = Helper::get_semester();
 
 $fp_database = new FP_Database();
@@ -115,6 +116,7 @@ switch ( $user['type'] )
 			<form action='/Customizing/global/include/fpraktikum/submit/fp-signout.php' method='post' class='form-horizontal'>
 				<input type='hidden' name='registrant' value='" . $user_login . "'>
 				<input type='hidden' name='semester' value='" . $semester . "'>
+				<input type='hidden' name='token' value='" . $data['token'] . "' > 
 				<div class='alert alert-success' role='alert'><strong>Schau mal!</strong> Du bist angemeldet.</div>
 				
 				<p>Dies sind die Informationen, die in der Datenbank gespeichert sind:</p>
@@ -163,6 +165,7 @@ switch ( $user['type'] )
 				<div class='form-group'>	
 					<label class='col-sm-4 col-md-3 col-lg-2 control-label'></label>
 					<div class='col-sm-8 col-md-9 col-lg-10'>
+					<input type='hidden' name='token' value='" . $data['token'] . "' > 
 						<span class='form-control-static'>Hier kannst du dich wieder <button onclick=confirmAbmeldung() type='submit' name='submit_signout' class='btn btn-danger'>Abmelden</button></span>
 					</div>
 				</div>
@@ -196,7 +199,7 @@ switch ( $user['type'] )
 			  <input type='hidden' name='semester' value='" . $semester . "'>
 			  <input type='hidden' name='institute1' value='" . $data['institute1'] . "'>
 			  <input type='hidden' name='institute2' value='" . $data['institute2'] . "'>
-
+                
 			  <p>Login: " . $user_login . "</p>
 			  <p>semester: " . $semester . "<br>
 
@@ -208,6 +211,7 @@ switch ( $user['type'] )
                   <input type='hidden' name='semester' value='" . $semester . "'>
                   <input type='hidden' name='institute1' value='" . $data['institute1'] . "'>
                   <input type='hidden' name='institute2' value='" . $data['institute2'] . "'>
+                  <input type='hidden' name='token' value='" . $data['token'] . "' > 
 			    <input type='submit' name='submit_partner-denies' value='Abmelden'>
 			  </form>
 		</div>
@@ -225,6 +229,7 @@ switch ( $user['type'] )
 			<form action='/Customizing/global/include/fpraktikum/submit/fp-signout.php' method='post' class='form-horizontal'>
 				<input type='hidden' name='registrant' value='" . $user_login . "'>
 				<input type='hidden' name='semester' value='" . $semester . "'>
+				<input type='hidden' name='token' value='" . $data['token'] . "' > 
 				<div class='alert alert-success' role='alert'><strong>Schau mal!</strong> Du bist als Partner angemeldet.</div>
 				
 				<p>Dies sind die Informationen, die in der Datenbank gespeichert sind:</p>
