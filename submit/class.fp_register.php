@@ -203,7 +203,7 @@ class Register
         return true;
     }
 
-    public function signOut ( $registrant, $semester )
+    public function signOut ( $registrant, $semester, $token )
     {
         $this->error = [];
 
@@ -211,8 +211,8 @@ class Register
         {
             $this->registrant = $registrant;
             $this->semester = $semester;
-            $this->token = $_POST['token'];
-            if ($this->check_token(($this->registrant,$this->semester,$this->token))
+            $this->token = $token;
+            if ( ! $this->check_token( $this->registrant,$this->semester,$this->token ) )
             {
                 throw new FP_Error("Securitybreach, your Coumputer is about to be hacked!");
             }

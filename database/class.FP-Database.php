@@ -552,7 +552,7 @@ class FP_Database
         $data['graduation'] = $graduation;
         $data['register_date'] = $register_date;
         $data['notes'] = $notes;
-        $data['token'] = $token
+        $data['token'] = $token;
         $stmt->close();
 
         return $data;
@@ -760,7 +760,7 @@ class FP_Database
     }
     public function get_token($registrant,$semester)
     {
-        $stmt = $this->fp_database->prepare(" SELECT DISTINCT(token) FROM tbl_partners AS p 
+        $stmt = $this->dbFP->prepare(" SELECT DISTINCT(token) FROM tbl_partners AS p 
      JOIN tbl_registrations AS r ON p.registration_id = r.registration_id 
      JOIN tbl_courses AS c ON (r.course_id1 = c.course_id OR r.course_id2 = c.course_id) 
      WHERE `c`.`semester` = ?
@@ -770,8 +770,8 @@ class FP_Database
 
         $stmt->execute();
 
-        $stmt->fetch();
         $stmt->bind_result($token);
+        $stmt->fetch();
         $stmt->close();
 
         return $token;

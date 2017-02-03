@@ -75,6 +75,7 @@ switch ( $user['type'] )
 					<div class='col-sm-9 col-md-9 col-lg-10 radio' id='chooseInstitute'>
 						<label for='ba'><input class='radio_graduation' onchange=showInstitut('BA') type='radio' id='ba' name='graduation' value='BA'>Bachelor</label>
 						<label for='ma'><input class='radio_graduation' onchange=showInstitut('MA') type='radio' id='ma' name='graduation' value='MA'>Master</label>
+						<label for='mait'><input class='radio_graduation' onchange=showInstitut('MAIT') type='radio' id='mait' name='graduation' value='MAIT'>MasterIT</label>
 						<div id='instituts'></div>
 					</div>
 				</div>
@@ -166,7 +167,6 @@ switch ( $user['type'] )
 				<div class='form-group'>	
 					<label class='col-sm-4 col-md-3 col-lg-2 control-label'></label>
 					<div class='col-sm-8 col-md-9 col-lg-10'>
-					<input type='hidden' name='token' value='" . $data['token'] . "' > 
 						<span class='form-control-static'>Hier kannst du dich wieder <button onclick=confirmAbmeldung() type='submit' name='submit_signout' class='btn btn-danger'>Abmelden</button></span>
 					</div>
 				</div>

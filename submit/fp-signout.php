@@ -26,7 +26,8 @@ $post_signout = htmlspecialchars( $_POST['submit_signout'] );
 $post_partner_denies = htmlspecialchars( $_POST['submit_partner-denies'] );
 if ( isset( $post_signout ) )
 {
-    $Register->signOut( $data['registrant'], $data['semester'] );
+    echo $_POST['token'];
+    $Register->signOut( $data['registrant'], $data['semester'], $_POST['token'] );
 }
 elseif ( isset( $post_partner_denies ) )
 {
