@@ -2,6 +2,7 @@
 
 require_once ( "../database/class.FP-Database.php" );
 require_once ( "../class.fp_error.php" );
+require_once ( "../include/class.mail.php" );
 
 /**
  * Class Register. Is used to do all registration processes.
@@ -19,6 +20,7 @@ class Register
     private $fp_database;
     private $registrant;
     private $partner;
+    private $partner_name;
     private $institute1;
     private $institute2;
     private $semester;
@@ -39,7 +41,7 @@ class Register
      *
      * @return bool
      */
-    public function signUp_registrant ( $data, $partner = NULL )
+    public function signUp_registrant ( $data, $partner = NULL, $partner_name = NULL )
     {
         $this->error = [];
 
@@ -47,6 +49,7 @@ class Register
         {
             $this->registrant = $data['registrant'];
             $this->partner = $partner;
+            $this->partner_name = $partner_name;
             $this->institute1 = $data['institute1'];
             $this->institute2 = $data['institute2'];
             $this->semester = $data['semester'];
@@ -71,6 +74,11 @@ class Register
 
                 if ( $this->partner )
                 {
+                    if ( ! $this->check_partner() )
+                    {
+                        array_push( $this->error, "Wir konnten deinen Partner mit " );
+                    }
+
                     if ( ! $this->is_user_type_of( $this->partner, 'new' ) )
                     {
                         array_push( $this->error, "Dein angebener Partner '" . $this->partner . "' ist bereits angemeldet." );
@@ -127,6 +135,8 @@ class Register
         Logger::log( $this->registrant
             . " has registered with '$this->institute1, $this->institute2, $this->graduation, $this->partner'.", 2 );
 
+        $this->send_mail( $this->registrant, "Du hast dich angemeldet.", "Hi $this->registrant, du hast dich angemeldet!" );
+
         return true;
     }
 
@@ -179,12 +189,15 @@ class Register
         }
         catch ( Exception $error )
         {
+            Logger::log( $error );
             array_push( $this->error, $error );
             $this->error_bit = true;
             return false;
         }
 
         Logger::log( $this->partner . " has registered as a partner.", 2 );
+
+        $this->send_mail( $this->partner, "Du hast dich angemeldet.", "Hi $this->partner, du hast dich angemeldet!" );
 
         return true;
     }
@@ -227,12 +240,14 @@ class Register
         }
         catch ( Exception $error )
         {
+            Logger::log( $error );
             array_push( $this->error, $error );
             $this->error_bit = true;
             return false;
         }
 
         Logger::log( $this->registrant . " has signed off.", 2 );
+        $this->send_mail( $this->registrant, "Du hast dich abgemeldet.", "Hi $this->registrant, du hast dich abgemeldet!" );
 
         return true;
     }
@@ -272,6 +287,7 @@ class Register
         }
         catch ( FP_Error $error )
         {
+            Logger::log( $error );
             array_push( $this->error, $error );
             $this->error_bit = true;
             return false;
@@ -284,6 +300,7 @@ class Register
         }
 
         Logger::log( $this->partner. " has denied.", 2 );
+        $this->send_mail( $this->partner, "Du hast abgelehnt.", "Hi $this->partner, du hast abgelehnt!" );
 
         return true;
     }
@@ -355,6 +372,11 @@ class Register
         return $this->fp_database->checkUserInfo( $hrz );
     }
 
+    private function check_partner ()
+    {
+        return $this->fp_database->checkPartner( $this->partner, $this->partner_name, $this->semester )['type'] == "new";
+    }
+
     /**
      * Function checks if there are enough places in both institutes.
      *
@@ -384,7 +406,7 @@ class Register
      *
      * @return string   The faulty institute or "ok".
      */
-    public function are_offers_valid ()
+    private function are_offers_valid ()
     {
         if ( ! $this->fp_database->isOffer( $this->institute1, $this->semester, 0, $this->graduation ) )
         {
@@ -396,5 +418,10 @@ class Register
         }
 
         return "ok";
+    }
+
+    private function send_mail ( $hrz, $subject, $message )
+    {
+        Mail::send( $subject, $message, array( $this->fp_database->getMail( $hrz ) ) );
     }
 }

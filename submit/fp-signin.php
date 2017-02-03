@@ -31,7 +31,7 @@ if ( isset( $post_register ) )
         "semester"   => htmlspecialchars( $_POST['semester'] ),
         "institute1" => htmlspecialchars( $_POST['institute1'] ),
         "institute2" => htmlspecialchars( $_POST['institute2'] ),
-        "notes"      => htmlspecialchars( $_POST['notes'] )
+        "notes"      => htmlspecialchars( $_POST['notes'] ) . " "
     ];
 
     $partner = NULL;

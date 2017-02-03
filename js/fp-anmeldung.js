@@ -14,61 +14,48 @@ function showInstitut(studiengang) {
 
     var target = document.getElementById('instituts');
 
-    var httpRequest = new XMLHttpRequest();
+    Request( './Customizing/global/include/fpraktikum/fp-ajax-request.php?task=freePlaces&semester=' + semester
+        , function ( response ) {
+            var text_haelfte1 = "";
+            var text_haelfte2 = "";
 
-    httpRequest.onreadystatechange = function () {
-        try {
-            if (httpRequest.readyState === XMLHttpRequest.DONE) {
-                var response = JSON.parse(httpRequest.responseText);
+            var data = response[studiengang];
 
-                var text_haelfte1 = "";
-                var text_haelfte2 = "";
-
-                var data = response[studiengang];
-
-                // build form
-                for (var institut in data) {
-                    if (data[institut]['0']) {
-                        text_haelfte1 +=
-                            "<div class='radio'>" +
-                            "<label>" +
-                            "<input class='fp_institute' onchange=disableInstitutWahl() type='radio' name='institute1' value='" + institut + "' id='" + institut + "1'>" +
-                            "<span style='display:inline-block; min-width:40px'>" + institut + "</span>&nbsp;" +
-                            "<em class='hint text-muted small'>(frei: <span class='" + (data[institut]['0'] > 0 ? 'text-success' : 'text-danger') + "'>" + data[institut]['0'] + "</span>)</em>" +
-                            "</label>" +
-                            "</div>";
-                    }
-                    if (data[institut]['1']) {
-                        text_haelfte2 +=
-                            "<div class='radio'>" +
-                            "<label>" +
-                            "<input class='fp_institute' onchange=disableInstitutWahl() type='radio' name='institute2' value='" + institut + "' id='" + institut + "2'>" +
-                            "<span style='display:inline-block; min-width:40px'>" + institut + "</span>&nbsp;" +
-                            "<em class='hint text-muted small'>(frei: <span class='" + (data[institut]['1'] > 0 ? 'text-success' : 'text-danger') + "'>" + data[institut]['1'] + "</span>)</em>" +
-                            "</label>" +
-                            "</div>";
-                    }
+            // build form
+            for (var institut in data) {
+                if (data[institut]['0']) {
+                    text_haelfte1 +=
+                        "<div class='radio'>" +
+                        "<label>" +
+                        "<input class='fp_institute' onchange=disableInstitutWahl() type='radio' name='institute1' value='" + institut + "' id='" + institut + "1'>" +
+                        "<span style='display:inline-block; min-width:40px'>" + institut + "</span>&nbsp;" +
+                        "<em class='hint text-muted small'>(frei: <span class='" + (data[institut]['0'] > 0 ? 'text-success' : 'text-danger') + "'>" + data[institut]['0'] + "</span>)</em>" +
+                        "</label>" +
+                        "</div>";
                 }
-
-                target.innerHTML =
-                    "<div class='form-group'>" +
-                    "<label class='col-sm-4 col-md-3 col-lg-2 control-label'>1.&nbsp;Semesterhälfte</label>" +
-                    "<div class='col-sm-8 col-md-9 col-lg-4'>" + text_haelfte1 + "</div>" +
-                    "</div>" +
-                    "<div class='form-group'>" +
-                    "<label class='col-sm-4 col-md-3 col-lg-2 control-label'>2.&nbsp;Semesterhälfte</label>" +
-                    "<div class='col-sm-8 col-md-9 col-lg-4'>" + text_haelfte2 + "</div>" +
-                    "</div>" +
-                    "<div id='partner-correct'></div>";
+                if (data[institut]['1']) {
+                    text_haelfte2 +=
+                        "<div class='radio'>" +
+                        "<label>" +
+                        "<input class='fp_institute' onchange=disableInstitutWahl() type='radio' name='institute2' value='" + institut + "' id='" + institut + "2'>" +
+                        "<span style='display:inline-block; min-width:40px'>" + institut + "</span>&nbsp;" +
+                        "<em class='hint text-muted small'>(frei: <span class='" + (data[institut]['1'] > 0 ? 'text-success' : 'text-danger') + "'>" + data[institut]['1'] + "</span>)</em>" +
+                        "</label>" +
+                        "</div>";
+                }
             }
-        }
-        catch (e) {
-            alert('Es ist ein Fehler beim Abrufen der freien Plätze aufgetreten: ' + e);
-        }
-    }
 
-    httpRequest.open('GET', './Customizing/global/include/fpraktikum/fp-ajax-request.php?task=freePlaces&semester=' + semester);
-    httpRequest.send();
+            target.innerHTML =
+                "<div class='form-group'>" +
+                "<label class='col-sm-4 col-md-3 col-lg-2 control-label'>1.&nbsp;Semesterhälfte</label>" +
+                "<div class='col-sm-8 col-md-9 col-lg-4'>" + text_haelfte1 + "</div>" +
+                "</div>" +
+                "<div class='form-group'>" +
+                "<label class='col-sm-4 col-md-3 col-lg-2 control-label'>2.&nbsp;Semesterhälfte</label>" +
+                "<div class='col-sm-8 col-md-9 col-lg-4'>" + text_haelfte2 + "</div>" +
+                "</div>" +
+                "<div id='partner-correct'></div>";
+        } )
 }
 
 // switch (studiengang) {
@@ -125,42 +112,48 @@ function checkPartner() {
     var hrz = document.getElementById('partner-hrz').value;
     var name = document.getElementById('partner-name').value;
 
+    Request( './Customizing/global/include/fpraktikum/fp-ajax-request.php?task=partner&hrz=' + hrz + '&name=' + name + '&semester=' + semester
+        , function ( response ) {
+            var note = "";
+
+            switch (response['type']) {
+                case "registered":
+                    note = "<div class='alert alert-info' role='alert'><strong>Nicht möglich!</strong> Diese Person ist bereits registriert.</div>";
+                    document.getElementById('submitRegister').disabled = true;
+                    break;
+                case "partner-open":
+                case "partner-accepted":
+                    note = "<div class='alert alert-info' role='alert'><strong>Zu spät!</strong> Diese Person ist bereits als Partner hinzugefügt worden.</div>";
+                    document.getElementById('submitRegister').disabled = true;
+                    break;
+                case 'new':
+                    note = "<div class='alert alert-success' role='alert'><strong>Super!</strong> Person existiert.</div>";
+                    document.getElementById('submitRegister').disabled = false;
+                    break;
+                default:
+                    note = "<div class='alert alert-warning' role='alert'><strong>Vertippt?</strong> Person wurde nicht gefunden.</div>";
+                    document.getElementById('submitRegister').disabled = true;
+            }
+
+            document.getElementById('partner-correct').innerHTML = note;
+        });
+}
+
+function Request( request, func ) {
     var httpRequest = new XMLHttpRequest();
 
     httpRequest.onreadystatechange = function () {
         try {
             if (httpRequest.readyState === XMLHttpRequest.DONE) {
                 var response = JSON.parse(httpRequest.responseText);
-
-                var note = "";
-
-                switch (response['type']) {
-                    case "registered":
-                        note = "<div class='alert alert-info' role='alert'><strong>Nicht möglich!</strong> Diese Person ist bereits registriert.</div>";
-                        document.getElementById('submitRegister').disabled = true;
-                        break;
-                    case "partner-open":
-                    case "partner-accepted":
-                        note = "<div class='alert alert-info' role='alert'><strong>Zu spät!</strong> Diese Person ist bereits als Partner hinzugefügt worden.</div>";
-                        document.getElementById('submitRegister').disabled = true;
-                        break;
-                    case 'new':
-                        note = "<div class='alert alert-success' role='alert'><strong>Super!</strong> Person existiert.</div>";
-                        document.getElementById('submitRegister').disabled = false;
-                        break;
-                    default:
-                        note = "<div class='alert alert-warning' role='alert'><strong>Vertippt?</strong> Person wurde nicht gefunden.</div>";
-                        document.getElementById('submitRegister').disabled = true;
-                }
-
-                document.getElementById('partner-correct').innerHTML = note;
+                func( response );
             }
         }
         catch (e) {
-            alert('Es ist ein Fehler beim Abrufen des Partners aufgetreten: ' + e);
+            alert('Es ist ein Fehler aufgetreten: ' + e);
         }
     };
-    httpRequest.open('GET', './Customizing/global/include/fpraktikum/fp-ajax-request.php?task=partner&hrz=' + hrz + '&name=' + name + '&semester=' + semester);
+    httpRequest.open('GET', request);
     httpRequest.send();
 }
 
@@ -188,11 +181,7 @@ function disableInstitutWahl() {
             continue;
         }
 
-        if (!document.getElementById(element.id.slice(0, -1) + otherNumber).checked) {
-            element.disabled = false;
-        } else {
-            element.disabled = true;
-        }
+        element.disabled = document.getElementById(element.id.slice(0, -1) + otherNumber).checked;
     }
 
     // switch(institut) {
@@ -225,6 +214,7 @@ function disableInstitutWahl() {
 
 
 function formValidate() {
+    console.log( "Test" );
     var form = document.forms['registration'];
     var error = [];
 
@@ -243,7 +233,11 @@ function formValidate() {
 //  }
 
     if (error[0]) {
-        alert(error.join());
+        var errors = "";
+        errors += "<div class='alert alert-danger' role='alert'>";
+        errors += error.join();
+        errors += "</div>";
+        document.getElementById( 'fp_errors' ).innerHTML = errors;
         return false;
     } else {
         return true;

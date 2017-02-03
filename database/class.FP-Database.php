@@ -297,9 +297,9 @@ class FP_Database
     }
 
     /**
-     * function to check whether the users hrz-account is actually in the ilDB
+     * Function to check whether the users hrz-account is actually in the ilDB.
      *
-     * @param  string containing the hrz-account of user
+     * @param  $hrz string containing the hrz-account of user
      * @throws FP_Error
      * @return bool true if user was found, false if not
      */
@@ -321,6 +321,31 @@ class FP_Database
         $stmt->close();
 
         return $check;
+    }
+
+    /**
+     * Function returns the E-Mail of a user.
+     * @param $hrz string   HRZ-Number
+     * @return string       The users mail.
+     * @throws FP_Error
+     */
+    public function getMail ( $hrz )
+    {
+        $stmt = $this->dbIL->prepare( "SELECT `email` FROM " . $this->configIL['tbl-name'] . "
+      WHERE `login` = ?" );
+
+        $stmt->bind_param( "s", $hrz );
+
+        if ( ! $stmt->execute() )
+        {
+            throw new FP_Error( "Database Error in '" . __FUNCTION__ . "()': " . $stmt->error );
+        }
+
+        $user_email = "";
+        $stmt->bind_result( $user_email );
+        $stmt->fetch();
+
+        return $user_email;
     }
 
     ////////// Registration //////////
@@ -385,7 +410,7 @@ class FP_Database
                                 `semester_half` = 0 AND `institute` = ? AND `graduation` = ?)
         AND `course_id2` = (SELECT `course_id` FROM " . $this->configFP['tbl-courses'] . " WHERE `semester` = ? AND 
                                 `semester_half` = 1 AND `institute` = ? AND `graduation` = ?)),
-      0,?)
+      0,?,2378461)
         " );
 
         $stmt_registration->bind_param( "ssssss", $data['semester'], $data['institute1'], $data['graduation'],

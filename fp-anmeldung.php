@@ -87,9 +87,10 @@ switch ( $user['type'] )
 				<div class='form-group'>
 					<label class='col-sm-3 col-md-3 col-lg-2 control-label'>Bemerkungen</label>
 				    <div class='col-sm-9 col-md-9 col-lg-10 checkbox' id='notes'>
-				    <textarea name='notes' rows='5' cols='40'> </textarea>
+				    <textarea name='notes' rows='5' cols='40' placeholder='Bemerkungen...'></textarea>
 				    </div>
-				</div>	
+				</div>
+				<div id='fp_errors'></div>
 				<div class='form-group'>
 					<label class='col-sm-3 col-md-3 col-lg-2 control-label'></label>
 					<div class='col-sm-9 col-md-9 col-lg-10' id='choosePartner'>
