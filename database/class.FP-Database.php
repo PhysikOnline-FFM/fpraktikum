@@ -360,7 +360,7 @@ class FP_Database
      * @throws FP_Error                 if queries were not successful
      * @return bool                     if process was successful
      */
-    public function setRegistration ( $data, $partner_hrz )
+    public function setRegistration ( $data, $partner_hrz, $token )
     {
         $stmt_registration = $this->dbFP->prepare( "INSERT IGNORE INTO " . $this->configFP['tbl-registration'] . " 
       VALUES(
@@ -410,15 +410,15 @@ class FP_Database
                                 `semester_half` = 0 AND `institute` = ? AND `graduation` = ?)
         AND `course_id2` = (SELECT `course_id` FROM " . $this->configFP['tbl-courses'] . " WHERE `semester` = ? AND 
                                 `semester_half` = 1 AND `institute` = ? AND `graduation` = ?)),
-      0,?,2378461)
+      0,?,?)
         " );
 
         $stmt_registration->bind_param( "ssssss", $data['semester'], $data['institute1'], $data['graduation'],
             $data['semester'], $data['institute2'], $data['graduation'] );
 
-        $stmt_partners->bind_param( "sssssssss", $data['registrant'], $partner_hrz, $data['semester'],
+        $stmt_partners->bind_param( "ssssssssss", $data['registrant'], $partner_hrz, $data['semester'],
             $data['institute1'], $data['graduation'], $data['semester'], $data['institute2'], $data['graduation'],
-            $data['notes'] );
+            $data['notes'],$token);
 
         // if any of both queries fail, throw an error and log everything useful for debugging -> also important
         // to handle support requests
@@ -512,7 +512,7 @@ class FP_Database
      */
     public function getRegistration ( $hrz, $semester )
     {
-        $stmt = $this->dbFP->prepare( "SELECT p.snumber2, p.accepted, c.institute, c.graduation, r.register_date,p.notes 
+        $stmt = $this->dbFP->prepare( "SELECT p.snumber2, p.accepted, c.institute, c.graduation, r.register_date,p.notes,p.token 
       FROM tbl_partners AS p 
       JOIN tbl_registrations AS r ON p.registration_id = r.registration_id 
       JOIN tbl_courses AS c ON r.course_id1 = c.course_id OR r.course_id2 = c.course_id 
@@ -529,7 +529,7 @@ class FP_Database
         $graduation = "";
         $register_date = "";
         $notes = "";
-
+        $token="";
         for ( $semester_half = 0; $semester_half <= 1; $semester_half++ )
         {
             if ( ! $stmt->execute() )
@@ -537,7 +537,7 @@ class FP_Database
                 throw new FP_Error( "Database Error in '" . __FUNCTION__ . "()': " . $stmt->error );
             }
 
-            $stmt->bind_result( $snumber2, $isAccepted, $institute, $graduation, $register_date, $notes );
+            $stmt->bind_result( $snumber2, $isAccepted, $institute, $graduation, $register_date, $notes,$token );
             if ( $stmt->fetch() )
             {
                 $data['institute' . ($semester_half + 1)] = $institute;
@@ -552,6 +552,7 @@ class FP_Database
         $data['graduation'] = $graduation;
         $data['register_date'] = $register_date;
         $data['notes'] = $notes;
+        $data['token'] = $token
         $stmt->close();
 
         return $data;
@@ -757,4 +758,28 @@ class FP_Database
 
         return true;
     }
+    public function get_token($registrant,$semester)
+    {
+        $stmt = $this->fp_database->prepare(" SELECT DISTINCT(token) FROM tbl_partners AS p 
+     JOIN tbl_registrations AS r ON p.registration_id = r.registration_id 
+     JOIN tbl_courses AS c ON (r.course_id1 = c.course_id OR r.course_id2 = c.course_id) 
+     WHERE `c`.`semester` = ?
+     AND (snumber1 = ? OR snumber2= ?)");
+
+        $stmt->bind_param("sss", $semester, $registrant, $registrant);
+
+        $stmt->execute();
+
+        $stmt->fetch();
+        $stmt->bind_result($token);
+        $stmt->close();
+
+        return $token;
+    }
+    public function check_key($registrant,$semester,$post_token)
+    {
+
+    }
+
+
 }
