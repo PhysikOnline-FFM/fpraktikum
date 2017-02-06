@@ -2,7 +2,7 @@
 
 require_once("class.fp_register.php");
 require_once("../include/fp_constants.php");
-
+include "../include/header.php";
 
 /**
  * Script that is called after user wants to delete registration.
@@ -30,17 +30,20 @@ elseif ( isset( $_POST['submit_partner-denies'] ) )
 
 if ( $Register->isErrorBit() )
 {
-    echo '<div class=\"alert alert-danger\" role=\"alert\"><strong>Fehler:</strong><ul>';
+    echo '<div style="margin-top: 50px" class="container">';
+    echo '<div class="alert alert-danger" role="alert"><strong>Fehler:</strong><ul>';
     foreach ( $Register->getError() as $key => $text )
     {
         echo '<li>' . $text . '</li>';
     }
     echo '</ul></div>';
+    echo '</div>';
+    include "../include/footer.php";
     exit ();
+
 }
 else
 {
     echo '<div class=\"alert alert-danger\" role=\"alert\"><strong>Erfolg:</strong> Du hast dich erfolgreich ausgetragen!</p>';
 }
-
 header( "Location: " . fp_const\REGISTRATION_MASK );

@@ -77,6 +77,11 @@ class Register
 
                 if ( $this->partner )
                 {
+                    if ( $this->partner == $this->registrant )
+                    {
+                        array_push( $this->error, "Sorry, aber du kannst dich <strong>nicht</strong> selber als Partner angeben." );
+                    }
+
                     if ( ! $this->check_partner() )
                     {
                         array_push( $this->error, "Wir konnten deinen Partner mit '$this->partner'' und 
@@ -89,8 +94,7 @@ class Register
                     }
                 }
 
-                // TODO: not valid for LA's
-                if ( $this->institute1 == $this->institute2 )
+                if ( $this->institute1 == $this->institute2 && $this->graduation != "LA" )
                 {
                     array_push( $this->error, "Bitte wähle zwei verschiedene Institute aus." );
                 }
@@ -288,7 +292,7 @@ class Register
                 {
                     throw new FP_Error( "Securitybreach, your Coumputer is about to be hacked!" );
                 }
-                if ( ! $this->is_user_type_of( $this->partner, 'partner-open' ) )
+                if ( $this->is_user_type_of( $this->partner, 'new' ) || $this->is_user_type_of( $this->partner, 'registered' ) )
                 {
                     array_push( $this->error, "Du bist bereits angemeldet oder wurdest nicht als Partner hinzugefügt." );
                 }
@@ -417,7 +421,6 @@ class Register
         {
             return $this->institute1;
         }
-
         if ( $free_places[$this->graduation][$this->institute2][1] < $slots_needed )
         {
             return $this->institute2;
@@ -438,6 +441,7 @@ class Register
         {
             return $this->institute1;
         }
+
         if ( ! $this->fp_database->isOffer( $this->institute2, $this->semester, 1, $this->graduation ) )
         {
             return $this->institute2;

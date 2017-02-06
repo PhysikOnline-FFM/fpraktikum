@@ -3,6 +3,7 @@
 require_once("class.fp_register.php");
 require_once("../include/fp_constants.php");
 require_once("../include/class.logger.php");
+include "../include/header.php";
 
 ini_set( 'E_ALL', 1 );
 ini_set( 'display_errors', 1 );
@@ -31,12 +32,17 @@ if ( isset( $_POST['submit_register'] ) )
         "notes"      => htmlspecialchars( $_POST['notes'] ) . " "
     ];
 
+    if ( $data['graduation'] == "LA" )
+    {
+        $data['institute1'] = htmlspecialchars( $_POST['institute_la'] );
+        $data['institute2'] = htmlspecialchars( $_POST['institute_la'] );
+    }
+
     $partner = NULL;
     $partner_name = NULL;
 
     // check if the user chose a partner
-    $post = htmlspecialchars( $_POST['check-partner'] );
-    if ( isset( $post ) )
+    if ( isset( $_POST['check-partner'] ) )
     {
         $partner = htmlspecialchars( $_POST['partner-hrz'] );
         $partner_name = htmlspecialchars( $_POST['partner-name'] );
@@ -55,19 +61,21 @@ elseif ( isset( $_POST['submit_partner-accepts'] ) )
 
 if ( $Register->isErrorBit() )
 {
-    echo '<div class=\"alert alert-danger\" role=\"alert\"><strong>Fehler:</strong><ul>';
+    echo '<div style="margin-top: 50px" class="container">';
+    echo '<div class="alert alert-danger" role="alert"><strong>Fehler:</strong><ul>';
     foreach ( $Register->getError() as $key => $text )
     {
         echo '<li>' . $text . '</li>';
     }
     echo '</ul></div>';
+    echo '</div>';
+    include "../include/footer.php";
     exit ();
 }
 
 echo '<div class=\"alert alert-danger\" role=\"alert\"><strong>Erfolg:</strong> Deine Daten wurden erfolgreich gespeichert!</p>';
 
 header( "Location: " . fp_const\REGISTRATION_MASK );
-
 ?>
 
 <!--Deine Daten wurden erfolgreich gespeichert!-->

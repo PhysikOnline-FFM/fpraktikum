@@ -5,12 +5,13 @@
  * TODO: check input, farbige Markierung der freien Plätze, automatische Definiation der Institutwahl
  *       styling
  */
+$(document).ready(function(){$('[data-toggle=\"popover\"]').popover();});
 var semester = 'WS16/17';
 
 /**
  * display free instituts and corresponding places left
  */
-function showInstitut ( studiengang ) {
+function showInstitut ( graduation ) {
 
     var target = document.getElementById( 'instituts' );
 
@@ -18,31 +19,52 @@ function showInstitut ( studiengang ) {
         , function ( response ) {
             var text_haelfte1 = "";
             var text_haelfte2 = "";
+            var text_lehramt = "";
 
-            var data = response[studiengang];
+            var data = response[graduation];
 
             // build form
             for ( var institut in data ) {
-                if ( data[institut]['0'] ) {
-                    text_haelfte1 +=
+                if ( graduation == 'LA' ) {
+                    text_lehramt +=
                         "<div class='radio'>" +
                         "<label>" +
-                        "<input class='fp_institute' onchange=disableInstitutWahl() type='radio' name='institute1' value='" + institut + "' id='" + institut + "1'>" +
+                        "<input class='fp_institute' type='radio' name='institute_la' value='" + institut + "' id='" + institut + "'>" +
                         "<span style='display:inline-block; min-width:40px'>" + institut + "</span>&nbsp;" +
                         "<em class='hint text-muted small'>(frei: <span class='" + (data[institut]['0'] > 0 ? 'text-success' : 'text-danger') + "'>" + data[institut]['0'] + "</span>)</em>" +
                         "</label>" +
                         "</div>";
+                } else {
+                    if ( data[institut]['0'] != undefined ) {
+                        text_haelfte1 +=
+                            "<div class='radio'>" +
+                            "<label>" +
+                            "<input class='fp_institute' onchange=disableInstitutWahl() type='radio' name='institute1' value='" + institut + "' id='" + institut + "1'>" +
+                            "<span style='display:inline-block; min-width:40px'>" + institut + "</span>&nbsp;" +
+                            "<em class='hint text-muted small'>(frei: <span class='" + (data[institut]['0'] > 0 ? 'text-success' : 'text-danger') + "'>" + data[institut]['0'] + "</span>)</em>" +
+                            "</label>" +
+                            "</div>";
+                    }
+                    if ( data[institut]['1'] != undefined ) {
+                        text_haelfte2 +=
+                            "<div class='radio'>" +
+                            "<label>" +
+                            "<input class='fp_institute' onchange=disableInstitutWahl() type='radio' name='institute2' value='" + institut + "' id='" + institut + "2'>" +
+                            "<span style='display:inline-block; min-width:40px'>" + institut + "</span>&nbsp;" +
+                            "<em class='hint text-muted small'>(frei: <span class='" + (data[institut]['1'] > 0 ? 'text-success' : 'text-danger') + "'>" + data[institut]['1'] + "</span>)</em>" +
+                            "</label>" +
+                            "</div>";
+                    }
                 }
-                if ( data[institut]['1'] ) {
-                    text_haelfte2 +=
-                        "<div class='radio'>" +
-                        "<label>" +
-                        "<input class='fp_institute' onchange=disableInstitutWahl() type='radio' name='institute2' value='" + institut + "' id='" + institut + "2'>" +
-                        "<span style='display:inline-block; min-width:40px'>" + institut + "</span>&nbsp;" +
-                        "<em class='hint text-muted small'>(frei: <span class='" + (data[institut]['1'] > 0 ? 'text-success' : 'text-danger') + "'>" + data[institut]['1'] + "</span>)</em>" +
-                        "</label>" +
-                        "</div>";
-                }
+            }
+
+            if ( graduation == 'LA' ) {
+                target.innerHTML =
+                    "<div class='form-group'>" +
+                    "<label class='col-sm-4 col-md-3 col-lg-2 control-label'>Institut:</label>" +
+                    "<div class='col-sm-8 col-md-9 col-lg-4'>" + text_lehramt + "</div>" +
+                    "</div>";
+                return;
             }
 
             target.innerHTML =
@@ -53,8 +75,7 @@ function showInstitut ( studiengang ) {
                 "<div class='form-group'>" +
                 "<label class='col-sm-4 col-md-3 col-lg-2 control-label'>2.&nbsp;Semesterhälfte</label>" +
                 "<div class='col-sm-8 col-md-9 col-lg-4'>" + text_haelfte2 + "</div>" +
-                "</div>" +
-                "<div id='partner-correct'></div>";
+                "</div>";
         } )
 }
 
@@ -175,10 +196,17 @@ function formValidate () {
     console.log( "Test" );
     var form = document.forms['registration'];
     var error = [];
+        console.log( form['graduation'] );
 
     if ( !form['graduation'].value ) {
         error.push( 'Bitte wähle einen Studiengang aus.' );
-    } else {
+    }
+    else if ( form['graduation'].value == 'LA' ) {
+        if ( ! form['institute_la'].value ) {
+            error.push( 'Bitte wähle ein Institut aus.' );
+        }
+    }
+    else {
         if ( !form['institute1'].value || !form['institute2'].value ) {
             error.push( 'Bitte wähle zwei Institute aus.' );
         }

@@ -10,6 +10,7 @@
 
 require '../database/class.FP-Database.php';
 require 'class.exporter.php';
+require '../include/class.helper.php';
 
 $fp_database = new FP_Database();
 
@@ -69,14 +70,13 @@ if ( $_POST["export"] && $_POST["semester"] )
 ?>
 
     <form action="#" method="post">
-        Semester: <input type="text" name="semester" value="WS16/17">
+        Semester: <input type="text" name="semester" value="<?=Helper::get_semester() ?>">
     </form>
 
 <?php
 
 if ( $_POST['angebot-hinzufügen'] )
 {
-
     $data = [
         "institute"     => $_POST['institute'],
         "semester"      => $_POST['semester'],
@@ -84,6 +84,11 @@ if ( $_POST['angebot-hinzufügen'] )
         "semester_half" => $_POST['semester_half'],
         "slots"         => $_POST['slots']
     ];
+
+    if ( $data['graduation'] == 'LA' )
+    {
+        $data['semester_half'] = "both";
+    }
 
     // are all fields filled?
     foreach ( $data as $name => $value )
@@ -140,6 +145,7 @@ if ( $_POST['semester'] )
     echo "<p>Hier sind die momentanen Angebote:</p>";
 
     $angebote = $fp_database->getOffers( $semester );
+    $freePlaces = $fp_database->freePlaces( $semester );
 
     //var_dump($angebote);
     echo "
@@ -148,7 +154,8 @@ if ( $_POST['semester'] )
         <th>Institut</th>
         <th>Abschluss</th>
         <th>Semesterhälfte</th>
-        <th>Plätze</th>
+        <th>Max Plätze</th>
+        <th>Freie Plätze</th>
         <th>Eintrag löschen</th>
       </tr>";
 
@@ -160,6 +167,7 @@ if ( $_POST['semester'] )
         {
             echo "<td><input type='hidden' name='" . $name . "' value='" . $entry . "'>" . $entry . "</td>";
         }
+        echo "<td>" . $freePlaces[$column['graduation']][$column['institute']][$column['semester_half']] . "</td>";
         echo "<td><input type='submit' name='angebot-löschen' value='Löschen'></td>";
         echo "<input type='hidden' name='semester' value='" . $semester . "'>";
         echo "</form></tr>";
@@ -169,6 +177,7 @@ if ( $_POST['semester'] )
     // form to add a new entry
     echo "
     <p>Hier können Sie weitere Angebote hinzufügen (es wird nicht überprüft, ob das Angebot bereits besteht):</p>
+    <p>Für den Studiengang 'Lehramt' wird die Option 'Semesterhälfte' ignoriert und das Angebot immer in beide Semesterhälften geschrieben.</p>
     <form action='#' method='post'>
       <input type='hidden' name='semester' value='" . $semester . "'>
 
@@ -188,7 +197,7 @@ if ( $_POST['semester'] )
             <option value='BA'>Bachelor</option>
             <option value='MA'>Master</option>
             <option value='MAIT'>Master IT</option>
-            <option value='L3'>Lehramt</option>
+            <option value='LA'>Lehramt</option>
             <option value=''>Alle</option>
           </select>
         </td>

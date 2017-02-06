@@ -90,7 +90,7 @@ class FP_Database
         $stmt_courses->bind_param( "ssi", $semester, $graduation, $semester_half ); // defines the ?'s in the above stmt.
 
         $stmt_places_remaining = $this->dbFP->prepare( "
-      SELECT (c.max_slots - COUNT(snumber1 )-COUNT(snumber2)) 
+      SELECT (c.max_slots - COUNT(snumber1)-COUNT(snumber2)) 
         FROM tbl_registrations AS r
       JOIN tbl_partners AS p
         ON p.registration_id = r.registration_id
@@ -149,7 +149,7 @@ class FP_Database
         /*
         result = [graduation =>
                                institute =>
-                                           semester_halg =>
+                                           semester_half =>
                                                            freeplaces]
          */
 
@@ -173,7 +173,6 @@ class FP_Database
                 $stmt_courses->bind_result( $institute, $max_slots );
                 while ( $stmt_courses->fetch() )
                 {
-
                     $stmt_courses->store_result();
 
                     if ( ! $stmt_places_remaining->execute() )
@@ -184,7 +183,7 @@ class FP_Database
                     $stmt_places_remaining->bind_result( $slots_remaining );
                     $stmt_places_remaining->fetch();
 
-                    $slots_remaining = ($slots_remaining == NULL) ? $max_slots : $slots_remaining;
+                    $slots_remaining = ($slots_remaining === NULL) ? $max_slots : $slots_remaining;
 
                     $result[$graduation][$institute][$semester_half] = $slots_remaining;
 

@@ -73,10 +73,12 @@ switch ( $user['type'] )
 				<div class='form-group'>
 					<label class='col-sm-3 col-md-3 col-lg-2 control-label'>Studiengang</label>
 					<div class='col-sm-9 col-md-9 col-lg-10 radio' id='chooseInstitute'>
-						<label for='ba'><input class='radio_graduation' onchange=showInstitut('BA') type='radio' id='ba' name='graduation' value='BA'>Bachelor</label>
-						<label for='ma'><input class='radio_graduation' onchange=showInstitut('MA') type='radio' id='ma' name='graduation' value='MA'>Master</label>
-						<label for='mait'><input class='radio_graduation' onchange=showInstitut('MAIT') type='radio' id='mait' name='graduation' value='MAIT'>MasterIT</label>
-						<div id='instituts'></div>
+                        <label for='ba'><input class='radio_graduation' onchange=showInstitut('BA') type='radio' id='ba' name='graduation' value='BA'>Bachelor</label>
+                        <label for='ma'><input class='radio_graduation' onchange=showInstitut('MA') type='radio' id='ma' name='graduation' value='MA'>Master</label>
+                        <label for='mait'><input class='radio_graduation' onchange=showInstitut('MAIT') type='radio' id='mait' name='graduation' value='MAIT'>
+                            <a href='#' data-toggle='popover' data-content='Studiengang Master mit Schwerpunkt Computational Science'><i class='glyphicon glyphicon-info-sign' ></i></a> MasterIT</label>
+                        <label for='la'><input class='radio_graduation' onchange=showInstitut('LA') type='radio' id='la' name='graduation' value='LA'>Lehramt</label>
+                        <div id='instituts'></div>                            
 					</div>
 				</div>
 				<div class='form-group'>
@@ -108,6 +110,12 @@ switch ( $user['type'] )
 
     case 'registered':
         $data = $fp_database->getRegistration( $user_login, $semester );
+        $partner_type = "";
+        if ( $data['partner'] )
+        {
+            $partner_type = ($fp_database->checkUser( $data['partner'], $semester )['type'] == 'partner-open')
+                ? "(offen)" : "(bestätigt)";
+        }
 
         $html = "
 	<div class='panel panel-default' style='background-color: white; border: 2px solid #b9b9b9'>
@@ -137,7 +145,8 @@ switch ( $user['type'] )
 				<div class='form-group'>	
 					<label class='col-sm-4 col-md-3 col-lg-2 control-label'>Partner (Benutzername)</label>
 					<div class='col-sm-8 col-md-9 col-lg-10'>
-						<span class='form-control-static'>" . $data['partner'] . "</span>
+						<span class='form-control-static'>" . $data['partner']
+                        . " $partner_type" . "</span>
 					</div>
 				</div>
 				<div class='form-group'>	
