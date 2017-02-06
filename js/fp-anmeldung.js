@@ -10,9 +10,9 @@ var semester = 'WS16/17';
 /**
  * display free instituts and corresponding places left
  */
-function showInstitut(studiengang) {
+function showInstitut ( studiengang ) {
 
-    var target = document.getElementById('instituts');
+    var target = document.getElementById( 'instituts' );
 
     Request( './Customizing/global/include/fpraktikum/fp-ajax-request.php?task=freePlaces&semester=' + semester
         , function ( response ) {
@@ -22,8 +22,8 @@ function showInstitut(studiengang) {
             var data = response[studiengang];
 
             // build form
-            for (var institut in data) {
-                if (data[institut]['0']) {
+            for ( var institut in data ) {
+                if ( data[institut]['0'] ) {
                     text_haelfte1 +=
                         "<div class='radio'>" +
                         "<label>" +
@@ -33,7 +33,7 @@ function showInstitut(studiengang) {
                         "</label>" +
                         "</div>";
                 }
-                if (data[institut]['1']) {
+                if ( data[institut]['1'] ) {
                     text_haelfte2 +=
                         "<div class='radio'>" +
                         "<label>" +
@@ -58,36 +58,19 @@ function showInstitut(studiengang) {
         } )
 }
 
-// switch (studiengang) {
-// 	case 'bachelor':
-// 	  target.innerHTML = "1. Semesterhälfte:<br>\
-//       <input type='radio' name='institut1' value='IAP'>IAP - Frei: <span id='IAP1-frei'></span><br>\
-//       <input type='radio' name='institut1' value='PI'>PI - Frei: <span id='PI1-frei'></span><br>\
-//       2.Semesterhälfte:<br>\
-//       <input type='radio' name='institut2' value='IAP'>IAP - Frei: <span id='IAP2-frei'></span><br>\
-//       <input type='radio' name='institut2' value='PI'>PI - Frei: <span id='PI2-frei'></span><br>";
-// 	  break;
-// 	case 'master':
-// 	  target.innerHTML = "1.Semesterhälfte:<br>\
-//       <input type='radio' name='institut1' value='IAP'>IAP - Frei: <span id='IAP1-frei'></span><br>\
-//       <input type='radio' name='institut1' value='PI'>PI - Frei: <span id='PI1-frei'></span><br>\
-//       <input type='radio' name='institut1' value='ITP'>ITP - Frei: <span id='ITP1-frei'></span><br>\
-//       2.Semesterhälfte:<br>\
-//       <input type='radio' name='institut2' value='IAP'>IAP - Frei: <span id='IAP2-frei'></span><br>\
-//       <input type='radio' name='institut2' value='PI'>PI - Frei: <span id='PI2-frei'></span><br>\
-//       <input type='radio' name='institut2' value='ITP'>ITP - Frei: <span id='ITP2-frei'></span><br>";
-//     break;
-//}
-
-
 /**
- * if the cehckbox is checked include the partner-form
+ * if the checkbox is checked include the partner-form
  */
-function choosePartner(element) {
-    var target = document.getElementById('partnerForm');
+function choosePartner ( element ) {
+    var target = document.getElementById( 'partnerForm' );
 
-    document.getElementById('submitRegister').disabled = false;
-    if (element.checked) {
+    document.getElementById( 'submitRegister' ).disabled = false;
+    var err_element = document.getElementById( 'partner-correct' );
+    if ( err_element ) {
+        document.getElementById( 'partner-correct' ).innerHTML = "";
+    }
+
+    if ( element.checked ) {
         target.innerHTML =
             "<div class='form-group'>" +
             "<label class='col-sm-4 col-md-2 control-label' for='partner-hrz'>HRZ-Account</label>" +
@@ -108,134 +91,111 @@ function choosePartner(element) {
  * ajax-call to determine if there is a registered user with this combination of hrz and last-name
  */
 
-function checkPartner() {
-    var hrz = document.getElementById('partner-hrz').value;
-    var name = document.getElementById('partner-name').value;
+function checkPartner () {
+    var hrz = document.getElementById( 'partner-hrz' ).value;
+    var name = document.getElementById( 'partner-name' ).value;
 
     Request( './Customizing/global/include/fpraktikum/fp-ajax-request.php?task=partner&hrz=' + hrz + '&name=' + name + '&semester=' + semester
         , function ( response ) {
             var note = "";
 
-            switch (response['type']) {
+            switch ( response['type'] ) {
                 case "registered":
                     note = "<div class='alert alert-info' role='alert'><strong>Nicht möglich!</strong> Diese Person ist bereits registriert.</div>";
-                    document.getElementById('submitRegister').disabled = true;
+                    document.getElementById( 'submitRegister' ).disabled = true;
                     break;
                 case "partner-open":
                 case "partner-accepted":
                     note = "<div class='alert alert-info' role='alert'><strong>Zu spät!</strong> Diese Person ist bereits als Partner hinzugefügt worden.</div>";
-                    document.getElementById('submitRegister').disabled = true;
+                    document.getElementById( 'submitRegister' ).disabled = true;
                     break;
                 case 'new':
                     note = "<div class='alert alert-success' role='alert'><strong>Super!</strong> Person existiert.</div>";
-                    document.getElementById('submitRegister').disabled = false;
+                    document.getElementById( 'submitRegister' ).disabled = false;
                     break;
                 default:
-                    note = "<div class='alert alert-warning' role='alert'><strong>Vertippt?</strong> Person wurde nicht gefunden.</div>";
-                    document.getElementById('submitRegister').disabled = true;
+                    note = "<div class='alert alert-danger' role='alert'><strong>Vertippt?</strong> Person wurde nicht gefunden.</div>";
+                    document.getElementById( 'submitRegister' ).disabled = true;
             }
 
-            document.getElementById('partner-correct').innerHTML = note;
-        });
+            document.getElementById( 'partner-correct' ).innerHTML = note;
+        } );
 }
 
-function Request( request, func ) {
+function Request ( request, func ) {
     var httpRequest = new XMLHttpRequest();
 
     httpRequest.onreadystatechange = function () {
         try {
-            if (httpRequest.readyState === XMLHttpRequest.DONE) {
-                var response = JSON.parse(httpRequest.responseText);
+            if ( httpRequest.readyState === XMLHttpRequest.DONE ) {
+                var response = JSON.parse( httpRequest.responseText );
                 func( response );
             }
         }
-        catch (e) {
-            alert('Es ist ein Fehler aufgetreten: ' + e);
+        catch ( e ) {
+            alert( 'Es ist ein Fehler aufgetreten: ' + e );
         }
     };
-    httpRequest.open('GET', request);
+    httpRequest.open( 'GET', request );
     httpRequest.send();
 }
 
 
 /**
- * check if one institute has been chosen and disable the option to choose the same institut again
+ * check if one institute has been chosen and disable the option to choose the same institute again
  */
-function disableInstitutWahl() {
-    //console.log('test');
-    //console.log(institute);
+function disableInstitutWahl () {
 
-    var otherOption = document.getElementsByClassName('fp_institute');
+    var otherOption = document.getElementsByClassName( 'fp_institute' );
 
-    for (var name in otherOption) {
+    for ( var name in otherOption ) {
         var element = otherOption[name];
 
         // why is otherOption.length in the array?
-        if (!element.id) {
+        if ( !element.id ) {
             continue;
         }
 
-        var otherNumber = element.id.slice(-1) % 2 + 1;
+        var otherNumber = element.id.slice( -1 ) % 2 + 1;
 
-        if (!document.getElementById(element.id.slice(0, -1) + otherNumber)) {
+        if ( !document.getElementById( element.id.slice( 0, -1 ) + otherNumber ) ) {
             continue;
         }
 
-        element.disabled = document.getElementById(element.id.slice(0, -1) + otherNumber).checked;
+        element.disabled = document.getElementById( element.id.slice( 0, -1 ) + otherNumber ).checked;
     }
-
-    // switch(institut) {
-    // case "PI1":
-    // 	document.getElementById("PI1").disabled = true;
-    // 	document.getElementById("IAP1").disabled = false;
-    //        	break;
-    //    	case "PI2":
-    // 	document.getElementById("PI2").disabled = true;
-    // 	document.getElementById("IAP2").disabled = false;
-    //        	break;
-    //    	case "IAP1":
-    // 	document.getElementById("IAP1").disabled = true;
-    // 	document.getElementById("PI1").disabled = false;
-    //        	break;
-    //    	case "IAP2":
-    // 	document.getElementById("IAP2").disabled = true;
-    // 	document.getElementById("PI2").disabled = false;
-    //        	break;
-    //   	default:
-    //        	console.log('default');
-    //}
 }
 
 /**
  * checks if form is valid
  * TODO: check if there are enough slots left
- * @return {bool}
+ * @return {boolean}
  */
-
-
-function formValidate() {
+function formValidate () {
     console.log( "Test" );
     var form = document.forms['registration'];
     var error = [];
 
-    if (!form['graduation'].value) {
-        error.push('Bitte wähle einen Studiengang aus.');
-    } else if (!form['institute1'].value || !form['institute2'].value) {
-        error.push('Bitte wähle zwei Institute aus.');
-    } else if (form['institute1'] == form['institute2']) {
-        error.push('Bitte wähle zwei verschiedene Institute.');
+    if ( !form['graduation'].value ) {
+        error.push( 'Bitte wähle einen Studiengang aus.' );
+    } else {
+        if ( !form['institute1'].value || !form['institute2'].value ) {
+            error.push( 'Bitte wähle zwei Institute aus.' );
+        }
+        if ( form['institute1'].value == form['institute2'].value ) {
+            //error.push( 'Bitte wähle zwei verschiedene Institute.' );
+        }
+    }
+    if ( form['check-partner'].checked ) {
+        if ( ! form['partner-hrz'].value || ! form['partner-name'].value ) {
+            error.push( 'Bitte trage einen Partner ein.' );
+        }
     }
 
-//  if(form['check-partner'].checked) {
-//    if (document.getElementById('partner-correct').innerHTML != 'Gefunden') {
-//      error.push('Dein Partner ist nicht valid.');
-//    }
-//  }
-
-    if (error[0]) {
+    if ( error[0] ) {
         var errors = "";
         errors += "<div class='alert alert-danger' role='alert'>";
-        errors += error.join();
+        errors += error.join( "<br>" );
         errors += "</div>";
         document.getElementById( 'fp_errors' ).innerHTML = errors;
         return false;

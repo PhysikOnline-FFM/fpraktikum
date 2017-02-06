@@ -1,7 +1,7 @@
 <?php
 
-require_once ( "fp_constants.php" );
-require_once ( "class.logger.php" );
+require_once("fp_constants.php");
+require_once("class.logger.php");
 
 /**
  * Class Logger. Can log a message to a file.

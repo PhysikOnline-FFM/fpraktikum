@@ -3,8 +3,8 @@
 //error_reporting(-1);
 //ini_set('display_errors', 1);
 
-require_once('/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/database/class.Database.php');
-require_once("/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/class.fp_error.php");
+require_once('class.Database.php');
+require_once("/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/include/class.fp_error.php");
 
 /**
  *
@@ -53,6 +53,7 @@ class FP_Database
      * -> DB call to determine institutes
      *
      * @param string $semester current semester
+     *
      * @throws FP_Error
      * @return array containing all data about the 'courses'
      *               following: [graduation =>
@@ -202,6 +203,7 @@ class FP_Database
      *
      * @param string $hrz  the partners hrz-account
      * @param string $name the partners lastname
+     *
      * @throws FP_Error
      * @return array true if user is in ILDB, false if not
      *              TODO: check whether user is already registered/a partner or even
@@ -239,6 +241,7 @@ class FP_Database
      * To check:  is user registered
      *            is user a partner but not accepted
      *            is user a partner and accepted
+     *
      * @throws FP_Error
      * @return array containing at index 0 the type of person ('angemeldet' if
      *               user is registered, 'partner' if user is *only* a partner
@@ -300,6 +303,7 @@ class FP_Database
      * Function to check whether the users hrz-account is actually in the ilDB.
      *
      * @param  $hrz string containing the hrz-account of user
+     *
      * @throws FP_Error
      * @return bool true if user was found, false if not
      */
@@ -325,7 +329,9 @@ class FP_Database
 
     /**
      * Function returns the E-Mail of a user.
+     *
      * @param $hrz string   HRZ-Number
+     *
      * @return string       The users mail.
      * @throws FP_Error
      */
@@ -346,6 +352,41 @@ class FP_Database
         $stmt->fetch();
 
         return $user_email;
+    }
+
+    /**
+     * Function to fetch additional information about a user from the ILIAS DB.
+     *
+     * @param $hrz string   HRZ of the user.
+     *
+     * @return array        first name + last name + matriculation
+     * @throws FP_Error
+     */
+    public function getAddInfos ( $hrz )
+    {
+        $stmt = $this->dbIL->prepare( "SELECT `firstname`, `lastname`, `matriculation` FROM " . $this->configIL['tbl-name'] . "
+      WHERE `login` = ?" );
+
+        $stmt->bind_param( "s", $hrz );
+
+        if ( ! $stmt->execute() )
+        {
+            throw new FP_Error( "Database Error in '" . __FUNCTION__ . "()': " . $stmt->error );
+        }
+
+        $firstname = "";
+        $lastname = "";
+        $matrikel = "";
+
+        $stmt->bind_result( $firstname, $lastname, $matrikel );
+
+        $stmt->fetch();
+
+        return array(
+            "first_name" => $firstname,
+            "last_name"  => $lastname,
+            "matrikel"   => $matrikel,
+        );
     }
 
     ////////// Registration //////////
@@ -418,7 +459,7 @@ class FP_Database
 
         $stmt_partners->bind_param( "ssssssssss", $data['registrant'], $partner_hrz, $data['semester'],
             $data['institute1'], $data['graduation'], $data['semester'], $data['institute2'], $data['graduation'],
-            $data['notes'],$token);
+            $data['notes'], $token );
 
         // if any of both queries fail, throw an error and log everything useful for debugging -> also important
         // to handle support requests
@@ -449,6 +490,7 @@ class FP_Database
      *
      * @param $partner_hrz string   The HRZ of the partner
      * @param $semester    string   The current semester.
+     *
      * @throws FP_Error
      * @return true
      */
@@ -478,6 +520,7 @@ class FP_Database
      *
      * @param $partner_hrz string   The HRZ of the partner
      * @param $semester    string   The current semester.
+     *
      * @throws FP_Error
      * @return true
      */
@@ -507,6 +550,7 @@ class FP_Database
      *
      * @param  string $hrz
      * @param  string $semester
+     *
      * @throws FP_Error
      * @return array           information found
      */
@@ -529,7 +573,7 @@ class FP_Database
         $graduation = "";
         $register_date = "";
         $notes = "";
-        $token="";
+        $token = "";
         for ( $semester_half = 0; $semester_half <= 1; $semester_half++ )
         {
             if ( ! $stmt->execute() )
@@ -537,14 +581,14 @@ class FP_Database
                 throw new FP_Error( "Database Error in '" . __FUNCTION__ . "()': " . $stmt->error );
             }
 
-            $stmt->bind_result( $snumber2, $isAccepted, $institute, $graduation, $register_date, $notes,$token );
+            $stmt->bind_result( $snumber2, $isAccepted, $institute, $graduation, $register_date, $notes, $token );
             if ( $stmt->fetch() )
             {
                 $data['institute' . ($semester_half + 1)] = $institute;
             }
             else
             {
-                echo ( "Fehler beim Abfragen der Anmeldedaten!" );
+                echo("Fehler beim Abfragen der Anmeldedaten!");
             }
         }
         $data['partner'] = $snumber2;
@@ -562,19 +606,21 @@ class FP_Database
      * Function to delete the registration of one user.
      *
      * @param  array $data
+     *
      * @throws FP_Error
      * @return true
      */
     public function rmRegistration ( $data )
     {
-        // TODO: Join with other tables to check for right semester
-        $stmt = $this->dbFP->prepare( "
-      DELETE FROM tbl_partners
-      WHERE `snumber1` = ?" );
-        // $stmt = $this->dbFP->prepare("DELETE FROM ".$this->configFP['tbl-anmeldung']."
-        //   WHERE `hrz` = ? && `semester` = ?");
+        $stmt = $this->dbFP->prepare(
+            "DELETE p
+             FROM tbl_partners AS p 
+             JOIN tbl_registrations AS r ON p.registration_id = r.registration_id 
+             JOIN tbl_courses AS c ON r.course_id1 = c.course_id OR r.course_id2 = c.course_id 
+             WHERE `p`.`snumber1` = ? AND `c`.`semester` = ?"
+        );
 
-        $stmt->bind_param( "s", $data['registrant'] );
+        $stmt->bind_param( "ss", $data['registrant'], $data['semester'] );
 
         if ( ! $stmt->execute() )
         {
@@ -590,17 +636,20 @@ class FP_Database
      * Get all registrations in DB.
      *
      * @param  string $semester
+     *
      * @throws FP_Error
      * @return array
      */
     public function getAllRegistrations ( $semester )
     {
-        $stmt = $this->dbFP->prepare( "SELECT p.snumber1, p.snumber2, r.register_date, c1.institute, c1.graduation, c2.institute, p.notes 
-      FROM tbl_partners AS p 
-      JOIN tbl_registrations AS r ON p.registration_id = r.registration_id 
-      JOIN tbl_courses AS c1 ON c1.course_id = r.course_id1 
-      JOIN tbl_courses AS c2 ON c2.course_id = r.course_id2 
-      WHERE c1.semester = ? AND c2.semester = ?" );
+        $stmt = $this->dbFP->prepare(
+            "SELECT p.snumber1, p.snumber2, r.register_date, c1.institute, c1.graduation, c2.institute, p.notes 
+             FROM tbl_partners AS p 
+             JOIN tbl_registrations AS r ON p.registration_id = r.registration_id 
+             JOIN tbl_courses AS c1 ON c1.course_id = r.course_id1 
+             JOIN tbl_courses AS c2 ON c2.course_id = r.course_id2 
+             WHERE c1.semester = ? AND c2.semester = ?"
+        );
 
         $stmt->bind_param( "ss", $semester, $semester );
 
@@ -641,6 +690,7 @@ class FP_Database
 
     /**
      * Function to add a new course to the db, slots needs to be an integer.
+     *
      * @throws FP_Error
      * @return bool if query was successfull
      */
@@ -665,6 +715,7 @@ class FP_Database
      * Function to receive an multidimensional array containing all course data.
      *
      * @param $semester string  Current semester.
+     *
      * @throws FP_Error
      * @return array containing data about all angebote:
      *               [['institut', 'semester', 'abschluss', 'semesterhaelfte', 'plaetze']]
@@ -739,13 +790,16 @@ class FP_Database
      * Remove one course from db.
      *
      * @param  array $data name of institut, semester, abschluss, semesterhaelfte
+     *
      * @throws FP_Error
      * @return true
      */
     public function rmOffer ( $data )
     {
-        $stmt = $this->dbFP->prepare( "DELETE FROM tbl_courses 
-      WHERE `institute` = ? AND `semester` = ? AND `semester_half` = ? AND `graduation` = ?" );
+        $stmt = $this->dbFP->prepare(
+            "DELETE FROM tbl_courses 
+            WHERE `institute` = ? AND `semester` = ? AND `semester_half` = ? AND `graduation` = ?"
+        );
 
         $stmt->bind_param( "ssis", $data['institute'], $data['semester'], $data['semester_half'], $data['graduation'] );
 
@@ -758,28 +812,38 @@ class FP_Database
 
         return true;
     }
-    public function get_token($registrant,$semester)
+
+    /**
+     * Functions returns the token linked to a HRZ number.
+     *
+     * @param $registrant
+     * @param $semester
+     *
+     * @throws
+     * @return mixed
+     */
+    public function get_token ( $registrant, $semester )
     {
-        $stmt = $this->dbFP->prepare(" SELECT DISTINCT(token) FROM tbl_partners AS p 
-     JOIN tbl_registrations AS r ON p.registration_id = r.registration_id 
-     JOIN tbl_courses AS c ON (r.course_id1 = c.course_id OR r.course_id2 = c.course_id) 
-     WHERE `c`.`semester` = ?
-     AND (snumber1 = ? OR snumber2= ?)");
+        $stmt = $this->dbFP->prepare(
+            "SELECT DISTINCT(token) FROM tbl_partners AS p 
+             JOIN tbl_registrations AS r ON p.registration_id = r.registration_id 
+             JOIN tbl_courses AS c ON (r.course_id1 = c.course_id OR r.course_id2 = c.course_id) 
+             WHERE `c`.`semester` = ?
+             AND (snumber1 = ? OR snumber2 = ?)"
+        );
 
-        $stmt->bind_param("sss", $semester, $registrant, $registrant);
+        $stmt->bind_param( "sss", $semester, $registrant, $registrant );
 
-        $stmt->execute();
+        if ( ! $stmt->execute() )
+        {
+            throw new FP_Error( "Database Error in '" . __FUNCTION__ . "()': " . $stmt->error );
+        }
 
-        $stmt->bind_result($token);
+        $token = "";
+        $stmt->bind_result( $token );
         $stmt->fetch();
         $stmt->close();
 
         return $token;
     }
-    public function check_key($registrant,$semester,$post_token)
-    {
-
-    }
-
-
 }

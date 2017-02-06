@@ -8,8 +8,8 @@
 //error_reporting(-1);
 //ini_set('display_errors', 1);
 
-require_once('/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/database/class.FP-Database.php');
-require_once('/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/class.helper.php');
+require_once('database/class.FP-Database.php');
+require_once('include/class.helper.php');
 
 if ( $_GET['task'] )
 {

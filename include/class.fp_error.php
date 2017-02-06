@@ -1,6 +1,6 @@
 <?php
 
-require_once ( "class.logger.php" );
+require_once("class.logger.php");
 
 /**
  * Class FP_Error, custom error class.

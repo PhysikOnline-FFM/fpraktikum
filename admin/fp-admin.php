@@ -8,8 +8,8 @@
 //error_reporting( E_ALL );
 //ini_set( 'display_errors', 1 );
 
-require '/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/database/class.FP-Database.php';
-require '/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/admin/class.exporter.php';
+require '../database/class.FP-Database.php';
+require 'class.exporter.php';
 
 $fp_database = new FP_Database();
 
@@ -29,8 +29,26 @@ if ( $_POST["export"] && $_POST["semester"] )
 
     $exporter = new Exporter();
 
-    $exporter->init( $fp_database->getAllRegistrations( $semester ) );
-    $exporter->setHead( [ "HRZ1", "HRZ2", "Studiengang", "Institut1", "Institut2", "Anmeldezeitpunkt", "Bemerkungen" ] );
+    $data = [];
+
+    foreach ( $fp_database->getAllRegistrations( $semester ) as $key => $value )
+    {
+        $line = [];
+        $personal = $fp_database->getAddInfos( $value['hrz1'] );
+        array_push( $line, $personal['first_name'] . " " . $personal['last_name'] );
+        array_push( $line, $personal['matrikel'] );
+        array_push( $line, $value['hrz1'] );
+
+        $personal = $fp_database->getAddInfos( $value['hrz2'] );
+        array_push( $line, $personal['first_name'] . " " . $personal['last_name'] );
+        array_push( $line, $personal['matrikel'] );
+        array_push( $line, $value['hrz2'] );
+
+        array_push( $data, array_merge( $line, array_slice( $value, 2 ) ) );
+    }
+
+    $exporter->init( $data );
+    $exporter->setHead( [ "Name", "Matrikelnummer", "HRZ", "Partner", "Matrikelnummer", "HRZ", "Studiengang", "Institut1", "Institut2", "Anmeldezeitpunkt", "Bemerkungen" ] );
 
     if ( $exporter->create_plain_file( $path ) != 0 )
     {

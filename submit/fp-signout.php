@@ -1,7 +1,7 @@
 <?php
 
 require_once("class.fp_register.php");
-require_once("../fp_constants.php");
+require_once("../include/fp_constants.php");
 
 
 /**
@@ -14,24 +14,18 @@ require_once("../fp_constants.php");
 error_reporting( E_ALL );
 ini_set( 'display_errors', 1 );
 
-$data = [
-    "registrant" => htmlspecialchars( $_POST['registrant'] ),
-    "semester"   => htmlspecialchars( $_POST['semester'] )
-];
-
 $Register = new Register();
 $fp_database = new FP_Database();
 
-$post_signout = htmlspecialchars( $_POST['submit_signout'] );
-$post_partner_denies = htmlspecialchars( $_POST['submit_partner-denies'] );
-if ( isset( $post_signout ) )
+if ( isset( $_POST['submit_signout'] ) )
 {
-    echo $_POST['token'];
-    $Register->signOut( $data['registrant'], $data['semester'], $_POST['token'] );
+    $Register->signOut( htmlspecialchars( $_POST['registrant'] )
+        , htmlspecialchars( $_POST['semester'] ), htmlspecialchars( $_POST['token'] ) );
 }
-elseif ( isset( $post_partner_denies ) )
+elseif ( isset( $_POST['submit_partner-denies'] ) )
 {
-    $Register->partnerDenies( htmlspecialchars( $_POST['partner'] ), htmlspecialchars( $data['semester'] ) );
+    $Register->partnerDenies( htmlspecialchars( $_POST['partner'] ),
+        htmlspecialchars( $_POST['semester'] ), htmlspecialchars( $_POST['token'] ) );
 }
 
 if ( $Register->isErrorBit() )

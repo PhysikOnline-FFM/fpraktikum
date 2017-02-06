@@ -5,8 +5,8 @@
  * and the person who got registered by him/her as the 'partner'.
  */
 
-require '/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/database/class.FP-Database.php';
-require '/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/class.helper.php';
+require 'database/class.FP-Database.php';
+require 'include/class.helper.php';
 // require 'class.FP-Database.php';                // only used for local modifications on Pc (Christian Grossmueller)
 // require 'class.Database.php';                   // comment it out if used on server
 
@@ -198,8 +198,7 @@ switch ( $user['type'] )
 
 			  <input type='hidden' name='partner' value='" . $user_login . "'>
 			  <input type='hidden' name='semester' value='" . $semester . "'>
-			  <input type='hidden' name='institute1' value='" . $data['institute1'] . "'>
-			  <input type='hidden' name='institute2' value='" . $data['institute2'] . "'>
+			  <input type='hidden' name='token' value='" . $data['token'] . "' > 
                 
 			  <p>Login: " . $user_login . "</p>
 			  <p>semester: " . $semester . "<br>
@@ -210,8 +209,6 @@ switch ( $user['type'] )
 			    <form action='/Customizing/global/include/fpraktikum/submit/fp-signout.php' method='post'>
 			      <input type='hidden' name='partner' value='" . $user_login . "'>
                   <input type='hidden' name='semester' value='" . $semester . "'>
-                  <input type='hidden' name='institute1' value='" . $data['institute1'] . "'>
-                  <input type='hidden' name='institute2' value='" . $data['institute2'] . "'>
                   <input type='hidden' name='token' value='" . $data['token'] . "' > 
 			    <input type='submit' name='submit_partner-denies' value='Abmelden'>
 			  </form>
@@ -228,9 +225,9 @@ switch ( $user['type'] )
 		</div>
 		<div class='panel-body' >
 			<form action='/Customizing/global/include/fpraktikum/submit/fp-signout.php' method='post' class='form-horizontal'>
-				<input type='hidden' name='registrant' value='" . $user_login . "'>
+				<input type='hidden' name='partner' value='" . $user_login . "'>
 				<input type='hidden' name='semester' value='" . $semester . "'>
-				<input type='hidden' name='token' value='" . $data['token'] . "' > 
+				<input type='hidden' name='token' value='" . $data_registrant['token'] . "' > 
 				<div class='alert alert-success' role='alert'><strong>Schau mal!</strong> Du bist als Partner angemeldet.</div>
 				
 				<p>Dies sind die Informationen, die in der Datenbank gespeichert sind:</p>
@@ -279,7 +276,7 @@ switch ( $user['type'] )
 				<div class='form-group'>	
 					<label class='col-sm-4 col-md-3 col-lg-2 control-label'></label>
 					<div class='col-sm-8 col-md-9 col-lg-10'>
-						<span class='form-control-static'>Hier kannst du dich wieder <button onclick=confirmAbmeldung() type='submit' class='btn btn-danger' name='partner-denies' value='Abmelden'>Abmelden</button></span>
+						<span class='form-control-static'>Hier kannst du dich wieder <button onclick=confirmAbmeldung() type='submit' class='btn btn-danger' name='submit_partner-denies' value='Abmelden'>Abmelden</button></span>
 					</div>
 				</div>
 				
