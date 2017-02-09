@@ -5,7 +5,7 @@
  * TODO: check input, farbige Markierung der freien Plätze, automatische Definiation der Institutwahl
  *       styling
  */
-$(document).ready(function(){$('[data-toggle=\"popover\"]').popover();});
+$(document).ready(function(){$('#info').popover({trigger:"focus", content:'Studiengang Master mit Schwerpunkt Computational Science'});});;
 var semester = 'WS16/17';
 
 /**
@@ -111,10 +111,10 @@ function choosePartner ( element ) {
 /**
  * ajax-call to determine if there is a registered user with this combination of hrz and last-name
  */
-
 function checkPartner () {
     var hrz = document.getElementById( 'partner-hrz' ).value;
     var name = document.getElementById( 'partner-name' ).value;
+    var note_element = document.getElementById( 'partner-correct' );
 
     Request( './Customizing/global/include/fpraktikum/fp-ajax-request.php?task=partner&hrz=' + hrz + '&name=' + name + '&semester=' + semester
         , function ( response ) {
@@ -139,7 +139,7 @@ function checkPartner () {
                     document.getElementById( 'submitRegister' ).disabled = true;
             }
 
-            document.getElementById( 'partner-correct' ).innerHTML = note;
+            note_element.innerHTML = note;
         } );
 }
 

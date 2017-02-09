@@ -7,8 +7,7 @@
 
 require 'database/class.FP-Database.php';
 require 'include/class.helper.php';
-// require 'class.FP-Database.php';                // only used for local modifications on Pc (Christian Grossmueller)
-// require 'class.Database.php';                   // comment it out if used on server
+
 
 //error_reporting( E_ALL );
 //ini_set( 'display_errors', 1 );
@@ -46,7 +45,7 @@ switch ( $user['type'] )
 			Anmeldung zum Fortgeschrittenen Praktikum 
 			<button  type='button' class='btn btn-default pull-right' data-target='#demo' data-toggle='collapse' >Hilfe nötig?</button>
 		</div>
-		<div class='panel-body' id='fprakikum_registration'>
+		<div class='panel-body' id='fprakikum_registration' >
 			<small class='text-info bg-info'>Dateien liegen in der VM unter Customizing/global/include/fpraktikum/</small>
 			<form name='registration' action='./Customizing/global/include/fpraktikum/submit/fp-signin.php' method='post' onsubmit='return formValidate()' class='form-horizontal'>
 				<p class=''>Hi " . $user_firstname . ", <br />hier kannst du dich für das Fortgeschrittenen Praktikum im " . $semester . " anmelden.</p>
@@ -71,12 +70,12 @@ switch ( $user['type'] )
 					</div>
 				</div>
 				<div class='form-group'>
-					<label class='col-sm-3 col-md-3 col-lg-2 control-label'>Studiengang</label>
+					<label class='col-sm-3 col-md-3 col-lg-2 control-label' >Studiengang</label>
 					<div class='col-sm-9 col-md-9 col-lg-10 radio' id='chooseInstitute'>
                         <label for='ba'><input class='radio_graduation' onchange=showInstitut('BA') type='radio' id='ba' name='graduation' value='BA'>Bachelor</label>
                         <label for='ma'><input class='radio_graduation' onchange=showInstitut('MA') type='radio' id='ma' name='graduation' value='MA'>Master</label>
-                        <label for='mait'><input class='radio_graduation' onchange=showInstitut('MAIT') type='radio' id='mait' name='graduation' value='MAIT'>
-                            <a href='#' data-toggle='popover' data-content='Studiengang Master mit Schwerpunkt Computational Science'><i class='glyphicon glyphicon-info-sign' ></i></a> MasterIT</label>
+                        <label for='mait'><input class='radio_graduation' onchange=showInstitut('MAIT') type='radio' id='mait' name='graduation' value='MAIT'>MasterIT</label>
+                            <a href='#' id='info'><i class='glyphicon glyphicon-info-sign' ></i></a> 
                         <label for='la'><input class='radio_graduation' onchange=showInstitut('LA') type='radio' id='la' name='graduation' value='LA'>Lehramt</label>
                         <div id='instituts'></div>                            
 					</div>
@@ -98,7 +97,7 @@ switch ( $user['type'] )
 				<div class='form-group'>
 					<label class='col-sm-3 col-md-3 col-lg-2 control-label'></label>
 					<div class='col-sm-9 col-md-9 col-lg-10' id='choosePartner'>
-						<input class='submit btn btn-default'  type='submit' name='submit_register' id='submitRegister' value='Anmelden'>
+						<input class='submit btn btn-default'  type='submit' name='submit_register ' id='submitRegister' value='Anmelden'>
 					</div>
 				</div>
 				</form>

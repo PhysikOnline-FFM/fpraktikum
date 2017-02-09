@@ -3,6 +3,7 @@
 require_once("../database/class.FP-Database.php");
 require_once("../include/class.fp_error.php");
 require_once("../include/class.mail.php");
+require_once("../include/class.template.php");
 
 /**
  * Class Register. Is used to do all registration processes.
@@ -28,10 +29,13 @@ class Register
     private $error = [];
     private $error_bit = false;
     private $token;
+    private $tpl;
+    private $send_mail = true;
 
     public function __construct ()
     {
         $this->fp_database = new FP_Database();
+        $this->tpl = new Template();
     }
 
     /**
@@ -140,7 +144,11 @@ class Register
         Logger::log( $this->registrant
             . " has registered with '$this->institute1, $this->institute2, $this->graduation, $this->partner'.", 2 );
 
-        $this->send_mail( $this->registrant, "Du hast dich angemeldet.", "Hi $this->registrant, du hast dich angemeldet!" );
+        $this->send_mail_registrant();
+        if ( $this->partner )
+        {
+            $this->send_mail_partner_inform();
+        }
 
         return true;
     }
@@ -212,7 +220,7 @@ class Register
 
         Logger::log( $this->partner . " has registered as a partner.", 2 );
 
-        $this->send_mail( $this->partner, "Du hast dich angemeldet.", "Hi $this->partner, du hast dich angemeldet!" );
+        $this->send_mail_partner_accepts();
 
         return true;
     }
@@ -270,7 +278,7 @@ class Register
         }
 
         Logger::log( $this->registrant . " has signed off.", 2 );
-        $this->send_mail( $this->registrant, "Du hast dich abgemeldet.", "Hi $this->registrant, du hast dich abgemeldet!" );
+        $this->send_mail_signoff();
 
         return true;
     }
@@ -330,7 +338,7 @@ class Register
         }
 
         Logger::log( $this->partner . " has denied.", 2 );
-        $this->send_mail( $this->partner, "Du hast abgelehnt.", "Hi $this->partner, du hast abgelehnt!" );
+        $this->send_mail_partner_denies();
 
         return true;
     }
@@ -387,6 +395,11 @@ class Register
         $user_type = $this->fp_database->checkUser( $hrz, $this->semester )['type'];
 
         return $type == $user_type;
+    }
+
+    public function has_user_partner ()
+    {
+        return $this->fp_database->checkUser( $this->registrant, $this->semester );
     }
 
     /**
@@ -450,9 +463,69 @@ class Register
         return "ok";
     }
 
+    /**
+     * Function sends a mail to a user.
+     * @param $hrz string       The user to send the mail to.
+     * @param $subject string   The subject line.
+     * @param $message string   The body of the email.
+     */
     private function send_mail ( $hrz, $subject, $message )
     {
-        Mail::send( $subject, $message, array( $this->fp_database->getMail( $hrz ) ) );
+        if ( $this->send_mail )
+        {
+            Mail::send( $subject, $message, array( $this->fp_database->getMail( $hrz ) ) );
+        }
+    }
+
+    private function send_mail_tpl ( $user, $subject, $tpl )
+    {
+        $this->tpl->load( "mail" );
+        $this->tpl->assign( "USER", $user );
+        $this->tpl->assign( "TEXT", $tpl->display() );
+        $this->send_mail( $user, $subject, $tpl->display() );
+    }
+
+    private function send_mail_registrant ()
+    {
+        $tpl = new Template();
+        $tpl->load( "mail_register" );
+        $this->send_mail_tpl( $this->registrant, "Anmeldung", $tpl );
+    }
+
+    private function send_mail_partner_accepts ()
+    {
+        $tpl = new Template();
+        $tpl->load( "mail_partner_accepts" );
+        $this->send_mail_tpl( $this->partner, "Anmeldung", $tpl );
+    }
+
+    private function send_mail_partner_denies ()
+    {
+        $tpl = new Template();
+        $tpl->load( "mail_partner_denies" );
+        $this->send_mail_tpl( $this->partner, "Abmeldung", $tpl );
+    }
+
+    private function send_mail_signoff ()
+    {
+        $this->tpl->load( "mail_signoff_registrant" );
+        $this->tpl->assign( "USER", $this->registrant );
+        $this->send_mail( $this->registrant, "Abmeldung", $this->tpl->display() );
+    }
+
+    private function send_mail_partner_inform ()
+    {
+        $this->tpl->load( "mail_partner_inform" );
+        $this->tpl->assign( "USER", $this->partner );
+        $this->send_mail( $this->partner, "Anmeldung", $this->tpl->display() );
+    }
+
+    /**
+     * @param bool $send_mail
+     */
+    public function setSendMail ( $send_mail )
+    {
+        $this->send_mail = $send_mail;
     }
 
     public function check_token ( $registrant, $semester, $post_token )
