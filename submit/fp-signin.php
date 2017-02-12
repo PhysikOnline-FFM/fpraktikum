@@ -75,7 +75,7 @@ if ( $Register->isErrorBit() )
 
 echo '<div class=\"alert alert-danger\" role=\"alert\"><strong>Erfolg:</strong> Deine Daten wurden erfolgreich gespeichert!</p>';
 
-//header( "Location: " . fp_const\REGISTRATION_MASK );
+header( "Location: " . fp_const\REGISTRATION_MASK );
 ?>
 
 <!--Deine Daten wurden erfolgreich gespeichert!-->

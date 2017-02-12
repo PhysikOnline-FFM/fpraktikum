@@ -24,22 +24,27 @@ $semester = Helper::get_semester();
 $fp_database = new FP_Database();
 
 $user = $fp_database->checkUser( $user_login, $semester );    // Variable containing all needed infos about the current user
-// weather he is already registered or not.
+$dates = $fp_database->getDates($semester);
 
-/**
- * Switch to evaluate the different types of user statuses.
- * Statuses :           default , registered, partner accept, partner accepted
- * default :            shows the standard html mask of the site and is equivalent to 'not registered' saved as the variable $html
- * registered :         shows a html mask containing all infos about the registration , degree , etc. saved as $html
- * partner-open:        shows a html mask containing the info that someone else has added the user as partner
- *                      the user gets the chance to see who added him to which group and too accept his partner.
- * partner-accepted:    the partner has accepted, sees all information and can remove themself
- */
-switch ( $user['type'] )
-{
-    default:
-    case 'new':
-        $html = "
+
+
+//if ( Helper::validate_dates($dates['startdate'],$dates['enddate']) )
+//{
+
+    /**
+     * Switch to evaluate the different types of user statuses.
+     * Statuses :           default , registered, partner accept, partner accepted
+     * default :            shows the standard html mask of the site and is equivalent to 'not registered' saved as the variable $html
+     * registered :         shows a html mask containing all infos about the registration , degree , etc. saved as $html
+     * partner-open:        shows a html mask containing the info that someone else has added the user as partner
+     *                      the user gets the chance to see who added him to which group and too accept his partner.
+     * partner-accepted:    the partner has accepted, sees all information and can remove themself
+     */
+    switch ( $user['type'] )
+    {
+        default:
+        case 'new':
+            $html = "
 	<div class='panel panel-default' style='background-color: white; border: 2px solid #b9b9b9'>
 		<div class='panel-heading' style='background-color: #b9b9b9;'>
 			Anmeldung zum Fortgeschrittenen Praktikum 
@@ -97,7 +102,7 @@ switch ( $user['type'] )
 				<div class='form-group'>
 					<label class='col-sm-3 col-md-3 col-lg-2 control-label'></label>
 					<div class='col-sm-9 col-md-9 col-lg-10' id='choosePartner'>
-						<input class='submit btn btn-default'  type='submit' name='submit_register ' id='submitRegister' value='Anmelden'>
+						<input class='submit btn btn-default'  type='submit' name='submit_register' id='submitRegister' value='Anmelden'>
 					</div>
 				</div>
 				</form>
@@ -105,18 +110,18 @@ switch ( $user['type'] )
 		</div>
 	</div>
     ";
-        break;
+            break;
 
-    case 'registered':
-        $data = $fp_database->getRegistration( $user_login, $semester );
-        $partner_type = "";
-        if ( $data['partner'] )
-        {
-            $partner_type = ($fp_database->checkUser( $data['partner'], $semester )['type'] == 'partner-open')
-                ? "(offen)" : "(bestätigt)";
-        }
+        case 'registered':
+            $data = $fp_database->getRegistration( $user_login, $semester );
+            $partner_type = "";
+            if ( $data['partner'] )
+            {
+                $partner_type = ($fp_database->checkUser( $data['partner'], $semester )['type'] == 'partner-open')
+                    ? "(offen)" : "(bestätigt)";
+            }
 
-        $html = "
+            $html = "
 	<div class='panel panel-default' style='background-color: white; border: 2px solid #b9b9b9'>
 		<div class='panel-heading' style='background-color: #b9b9b9;'>
 			Anmeldung zum Fortgeschrittenen Praktikum 
@@ -145,7 +150,7 @@ switch ( $user['type'] )
 					<label class='col-sm-4 col-md-3 col-lg-2 control-label'>Partner (Benutzername)</label>
 					<div class='col-sm-8 col-md-9 col-lg-10'>
 						<span class='form-control-static'>" . $data['partner']
-                        . " $partner_type" . "</span>
+                . " $partner_type" . "</span>
 					</div>
 				</div>
 				<div class='form-group'>	
@@ -183,13 +188,13 @@ switch ( $user['type'] )
 	</div>
     <script type='text/javascript' src='/home/elearning-www/public_html/elearning/ilias-5.1//Customizing/global/include/fpraktikum/js/fp-abmeldung.js'></script>
     ";
-        break;
-    case 'partner-open':
-        // data about user that included partner
-        $data = $fp_database->getRegistration( $user['registrant'], $semester );
+            break;
+        case 'partner-open':
+            // data about user that included partner
+            $data = $fp_database->getRegistration( $user['registrant'], $semester );
 
-        $html =
-            "<div class='panel panel-default' style='background-color: white; border: 2px solid #b9b9b9'>
+            $html =
+                "<div class='panel panel-default' style='background-color: white; border: 2px solid #b9b9b9'>
 		<div class='panel-heading' style='background-color: #b9b9b9;'>
 			Anmeldung zum Fortgeschrittenen Praktikum 
 		</div>
@@ -201,7 +206,7 @@ switch ( $user['type'] )
 			  <p>Abschluss: " . $data['graduation'] . "</p>
 			  <p>Institut 1: " . $data['institute1'] . "</p>
 			  <p>Institut 2: " . $data['institute2'] . "</p>      
-              <p>Bemerkungen:" .$data['notes']."      </p>
+              <p>Bemerkungen:" . $data['notes'] . "      </p>
 			  <p>Deine Daten:</p>
 
 			  <input type='hidden' name='partner' value='" . $user_login . "'>
@@ -222,12 +227,12 @@ switch ( $user['type'] )
 			  </form>
 		</div>
 	</div>";
-        break;
-    case 'partner-accepted':
-        // data about user that included partner
-        $data_registrant = $fp_database->getRegistration( $user['registrant'], $semester );
+            break;
+        case 'partner-accepted':
+            // data about user that included partner
+            $data_registrant = $fp_database->getRegistration( $user['registrant'], $semester );
 
-        $html="<div class='panel panel-default' style='background-color: white; border: 2px solid #b9b9b9'>
+            $html = "<div class='panel panel-default' style='background-color: white; border: 2px solid #b9b9b9'>
 		<div class='panel-heading' style='background-color: #b9b9b9;'>
 			Anmeldung zum Fortgeschrittenen Praktikum 
 		</div>
@@ -293,20 +298,18 @@ switch ( $user['type'] )
 	</div>
     <script type='text/javascript' src='/home/elearning-www/public_html/elearning/ilias-5.1//Customizing/global/include/fpraktikum/js/fp-abmeldung.js'></script>
     ";
-        break;
-}
-/**
- * statement to determined weather the Registration is available or not.
- * short check if the "todays" date == the wanted date.
- * TODO: make it possible to change the date time which is checked by the statement via admin page.
- */
-if ( new DateTime() < new DateTime( "2016-09-18 00:00:00" ) )
-{
-    // $html = "<b>Die Anmeldung ist noch nicht freigeschaltet!</b>";
-}
-else if ( new DateTime() > new DateTime( "2016-10-02 00:00:00" ) )
-{
-    // $html = "<b>Die Anmeldung ist beendet!</b>";
-}
+            break;
+    }
+//}
 
+/**
+ *
+ *  TODO : A default site if Registration is not available.
+ */
+
+
+//else
+//{
+//
+//}
 // >>>>>>> b465e2910b30d194080600158f52644e40744274

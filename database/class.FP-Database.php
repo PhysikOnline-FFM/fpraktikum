@@ -845,4 +845,62 @@ class FP_Database
 
         return $token;
     }
+
+    public function setDate( $startdate, $enddate, $semester )
+    {
+        $stmt = $this->dbFP->prepare("INSERT INTO tbl_dates VALUES ( ?, ?, ?,NULL )");
+        $stmt->bind_param("sss", $startdate, $enddate, $semester);
+
+        if ( ! $stmt->execute() )
+        {
+            throw new FP_Error( "Database Error in '" . __FUNCTION__ . "()': " . $stmt->error );
+        }
+
+        $stmt->close();
+
+        return true;
+    }
+
+    public function getDates($semester)
+    {
+        $stmt = $this->dbFP->prepare("SELECT startdate , enddate FROM tbl_dates WHERE semester = ? ");
+        $stmt->bind_param("s", $semester);
+
+        if ( ! $stmt->execute() )
+        {
+            throw new FP_Error( "Database Error in '" . __FUNCTION__ . "()': " . $stmt->error );
+        }
+
+        $dates =[
+            'startdate' => "",
+            'enddate'   => ""
+        ];
+        $stmt->bind_result( $startdate ,$enddate);
+
+        $stmt->fetch();
+
+        $dates= [
+            'startdate' => $startdate,
+            'enddate'   => $enddate];
+
+        $stmt->close();
+
+        return $dates;
+    }
+
+    public function rmDates($semester)
+    {
+        $stmt = $this->dbFP->prepare("DELETE FROM tbl_dates WHERE semester = ?");
+        $stmt->bind_param("s", $semester);
+
+        if ( ! $stmt->execute() )
+        {
+            throw new FP_Error( "Database Error in '" . __FUNCTION__ . "()': " . $stmt->error );
+        }
+
+        $stmt->close();
+
+        return true;
+
+    }
 }

@@ -27,4 +27,17 @@ class Helper
 
         return $semester;
     }
+    static public function validate_dates($date1,$date2)
+    {
+        $now = strtotime(date('d-m-Y H:i:s'));
+        $date1 = strtotime($date1);
+        $date2 = strtotime($date2);
+
+        if (($date1 <= $now) && ($now < $date2))
+        {
+            return true ;
+        }
+
+        return false ;
+    }
 }
