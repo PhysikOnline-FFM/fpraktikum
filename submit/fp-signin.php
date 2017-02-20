@@ -1,12 +1,12 @@
 <?php
 
+//ini_set( 'display_errors', 1 );
+
 require_once("class.fp_register.php");
 require_once("../include/fp_constants.php");
 require_once("../include/class.logger.php");
 include "../include/header.php";
 
-ini_set( 'E_ALL', 1 );
-ini_set( 'display_errors', 1 );
 
 
 /**
@@ -23,14 +23,14 @@ $Register = new Register();
 if ( isset( $_POST['submit_register'] ) )
 {
     // saves form-input data of student
-    $data = [
+    $data = array(
         "registrant" => htmlspecialchars( $_POST['registrant'] ),
         "graduation" => htmlspecialchars( $_POST['graduation'] ),
         "semester"   => htmlspecialchars( $_POST['semester'] ),
         "institute1" => htmlspecialchars( $_POST['institute1'] ),
         "institute2" => htmlspecialchars( $_POST['institute2'] ),
         "notes"      => htmlspecialchars( $_POST['notes'] ) . " "
-    ];
+    );
 
     if ( $data['graduation'] == "LA" )
     {

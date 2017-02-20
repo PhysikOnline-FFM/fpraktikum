@@ -1,0 +1,1 @@
+{#REGISTRANT#} hat sich abgemeldet. Damit ist auch deine Anmeldung gelöscht worden.

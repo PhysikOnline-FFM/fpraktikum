@@ -1,27 +1,35 @@
 <?php
+
+require_once ( "fp_constants.php" );
+
 /**
  * Loads the template-system of FPraktikum
  *
  * @author Bastian Krones
  * @date 03.01.2017
  */
-
 class Template
 {
-    private $templateDir = "/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/templates/";// Location of the templates' files
+    private $templateDir;// Location of the templates' files
     private $templateFile;			// Complete  path to template file
     private $templateName;			// Name of template file
     private $template = "";			// Content of template
-    private $languageDir = "/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/languages/";// Location of all language files
+    private $languageDir;// Location of all language files
     private $languageFile = "";		// Complete  path to language file
-    private $leftDel = "\{%";		// Left Delimiter for default placeholder
-    private $rightDel = "\}";		// Right Delimiter for default placeholder
+    private $leftDel = "\{#";		// Left Delimiter for default placeholder
+    private $rightDel = "#\}";		// Right Delimiter for default placeholder
     private $leftDelF = "\{";		// Left Delimiter for functions
     private $rightDelF = "\}";		// Right Delimiter for functions
     private $leftDelC = "\{\*";		// Left Delimiter for comments; Special characters have to be escaped
     private $rightDelC = "\*\}";	// Right Delimiter for comments
     private $leftDelL = "\{L_";		// Left Delimiter for default placeholder
     private $rightDelL = "\}";		// Right Delimiter for default placeholder
+
+    public function __construct ()
+    {
+        $this->templateDir = fp_const\FP_DIRECTORY . "templates/";
+        $this->languageDir = fp_const\FP_DIRECTORY . "languages/";
+    }
 
     /**
      * Open template file

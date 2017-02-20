@@ -1,1 +1,1 @@
-Du hast Dich als Partner von {#REGISTRANT} angemeldet.
+du hast dich als Partner von {#REGISTRANT#} angemeldet.

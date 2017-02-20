@@ -28,7 +28,7 @@ $dates = $fp_database->getDates($semester);
 
 $html = "<div class='panel panel-default' style='background-color: white; border: 2px solid #b9b9b9'>
 		<div class='panel-heading' style='background-color: #b9b9b9;'>
-			Anmeldung zum Fortgeschrittenen Praktikum 
+			Anmeldung zum Fortgeschrittenen Praktikum
 		</div>";
 
 //if ( Helper::validate_dates($dates['startdate'],$dates['enddate']) )
@@ -47,24 +47,25 @@ $html = "<div class='panel panel-default' style='background-color: white; border
     {
         default:
         case 'new':
-            $html .= "	
+            $html .= "
 			<button  type='button' class='btn btn-default pull-right' data-target='#demo' data-toggle='collapse' >Hilfe nötig?</button>
 		<div class='panel-body' id='fprakikum_registration' >
-			<small class='text-info bg-info'>Dateien liegen in der VM unter Customizing/global/include/fpraktikum/</small>
+			<small class='text-info bg-info'>Dateien liegen in der VM unter Customizing/global/include/fpraktikum/ und die db auf vm.elearning.physik.uni-frankfurt.de</small>
+			<div class='alert alert-danger'>Dies ist nur die Entwicklungsumgebung für die Anmeldung!</div>
 			<form name='registration' action='./Customizing/global/include/fpraktikum/submit/fp-signin.php' method='post' onsubmit='return formValidate()' class='form-horizontal'>
 				<p class=''>Hi " . $user_firstname . ", <br />hier kannst du dich für das Fortgeschrittenen Praktikum im " . $semester . " anmelden.</p>
 				<div id='demo' class='collapse text-info bg-info'>
 					Informationen kommen bald.
 				</div>
 				<p>Wenn du bei der Anmeldung auf Probleme stößst, zögere nicht uns an <a href='mailto:team@elearning.physik.uni-frankfurt.de'>schreiben</a>.</p>
-				
+
 				<input type='hidden' name='registrant' value='" . $user_login . "'>
 				<input type='hidden' name='semester' value='" . $semester . "'>
-				
+
 				<div class='form-group'>
 					<label class='col-sm-3 col-md-3 col-lg-2 control-label'>Benutzer</label>
 					<div class='col-sm-9 col-md-9 col-lg-10'>
-						<span class='form-control-static value'>" . $user_login . "</span>	
+						<span class='form-control-static value'>" . $user_login . "</span>
 					</div>
 				</div>
 				<div class='form-group'>
@@ -79,9 +80,9 @@ $html = "<div class='panel panel-default' style='background-color: white; border
                         <label for='ba'><input class='radio_graduation' onchange=showInstitut('BA') type='radio' id='ba' name='graduation' value='BA'>Bachelor</label>
                         <label for='ma'><input class='radio_graduation' onchange=showInstitut('MA') type='radio' id='ma' name='graduation' value='MA'>Master</label>
                         <label for='mait'><input class='radio_graduation' onchange=showInstitut('MAIT') type='radio' id='mait' name='graduation' value='MAIT'>MasterIT</label>
-                            <a href='#' id='info'><i class='glyphicon glyphicon-info-sign' ></i></a> 
+                            <a href='#' id='info'><i class='glyphicon glyphicon-info-sign' ></i></a>
                         <label for='la'><input class='radio_graduation' onchange=showInstitut('LA') type='radio' id='la' name='graduation' value='LA'>Lehramt</label>
-                        <div id='instituts'></div>                            
+                        <div id='instituts'></div>
 					</div>
 				</div>
 				<div class='form-group'>
@@ -115,7 +116,8 @@ $html = "<div class='panel panel-default' style='background-color: white; border
             $partner_type = "";
             if ( $data['partner'] )
             {
-                $partner_type = ($fp_database->checkUser( $data['partner'], $semester )['type'] == 'partner-open')
+                $data_user = $fp_database->checkUser( $data['partner'], $semester );
+                $partner_type = ($data_user['type'] == 'partner-open')
                     ? "(offen)" : "(bestätigt)";
             }
 
@@ -124,9 +126,9 @@ $html = "<div class='panel panel-default' style='background-color: white; border
 			<form action='/Customizing/global/include/fpraktikum/submit/fp-signout.php' method='post' class='form-horizontal'>
 				<input type='hidden' name='registrant' value='" . $user_login . "'>
 				<input type='hidden' name='semester' value='" . $semester . "'>
-				<input type='hidden' name='token' value='" . $data['token'] . "' > 
+				<input type='hidden' name='token' value='" . $data['token'] . "' >
 				<div class='alert alert-success' role='alert'><strong>Schau mal!</strong> Du bist angemeldet.</div>
-				
+
 				<p>Dies sind die Informationen, die in der Datenbank gespeichert sind:</p>
 				<div class='form-group'>
 					<label class='col-sm-4 col-md-3 col-lg-2 control-label'>Benutzername</label>
@@ -140,38 +142,38 @@ $html = "<div class='panel panel-default' style='background-color: white; border
 						<span class='form-control-static'>" . $data['graduation'] . "</span>
 					</div>
 				</div>
-				<div class='form-group'>	
+				<div class='form-group'>
 					<label class='col-sm-4 col-md-3 col-lg-2 control-label'>Partner (Benutzername)</label>
 					<div class='col-sm-8 col-md-9 col-lg-10'>
 						<span class='form-control-static'>" . $data['partner']
                 . " $partner_type" . "</span>
 					</div>
 				</div>
-				<div class='form-group'>	
+				<div class='form-group'>
 					<label class='col-sm-4 col-md-3 col-lg-2 control-label'>Datum</label>
 					<div class='col-sm-8 col-md-9 col-lg-10'>
 						<span class='form-control-static'>" . $data['register_date'] . "</span>
 					</div>
 				</div>
-				<div class='form-group'>	
+				<div class='form-group'>
 					<label class='col-sm-4 col-md-3 col-lg-2 control-label'>1.&nbsp;Semesterhälfte</label>
 					<div class='col-sm-8 col-md-9 col-lg-10'>
 						<span class='form-control-static'>" . $data['institute1'] . "</span>
 					</div>
 				</div>
-				<div class='form-group'>	
+				<div class='form-group'>
 					<label class='col-sm-4 col-md-3 col-lg-2 control-label'>2.&nbsp;Semesterhälfte</label>
 					<div class='col-sm-8 col-md-9 col-lg-10'>
 						<span class='form-control-static'>" . $data['institute2'] . "</span>
 					</div>
 				</div>
-				<div class='form-group'>	
+				<div class='form-group'>
 					<label class='col-sm-4 col-md-3 col-lg-2 control-label'>Bemerkungen</label>
 					<div class='col-sm-8 col-md-9 col-lg-10'>
 						<span class='form-control-static'>" . $data['notes'] . "</span>
 					</div>
 				</div>
-				<div class='form-group'>	
+				<div class='form-group'>
 					<label class='col-sm-4 col-md-3 col-lg-2 control-label'></label>
 					<div class='col-sm-8 col-md-9 col-lg-10'>
 						<span class='form-control-static'>Hier kannst du dich wieder <button onclick=confirmAbmeldung() type='submit' name='submit_signout' class='btn btn-danger'>Abmelden</button></span>
@@ -221,11 +223,11 @@ $html = "<div class='panel panel-default' style='background-color: white; border
 						<span class='form-control-static'>" . $data['notes'] . "</span>
 					</div>
 				</div>
-				
+
 				<hr>
-				
-                <p>Deine Daten:</p>    
-                
+
+                <p>Deine Daten:</p>
+
                 <div class='form-group'>
 					<label class='col-sm-4 col-md-3 col-lg-2 control-label'>Login</label>
 					<div class='col-sm-8 col-md-9 col-lg-10'>
@@ -239,19 +241,19 @@ $html = "<div class='panel panel-default' style='background-color: white; border
 					</div>
 				</div>
 			</form>
-        
+
             <p>Hier kannst du dich eintragen oder ablehnen:</p>
             <div class='row'>
                 <form action='/Customizing/global/include/fpraktikum/submit/fp-signin.php' method='post' class='col-xs-6 col-sm-2'>
                     <input type='hidden' name='partner' value='" . $user_login . "'>
                     <input type='hidden' name='semester' value='" . $semester . "'>
-                    <input type='hidden' name='token' value='" . $data['token'] . "' > 
+                    <input type='hidden' name='token' value='" . $data['token'] . "' >
                     <button class='btn btn-default' type='submit' name='submit_partner-accepts' value='Anmelden'>Anmelden</button>
                 </form>
                 <form action='/Customizing/global/include/fpraktikum/submit/fp-signout.php' method='post' class='col-xs-6 col-sm-2 col-sm-offset-8'>
                     <input type='hidden' name='partner' value='" . $user_login . "'>
                     <input type='hidden' name='semester' value='" . $semester . "'>
-                    <input type='hidden' name='token' value='" . $data['token'] . "' > 
+                    <input type='hidden' name='token' value='" . $data['token'] . "' >
                     <button class='btn btn-danger pull-right' type='submit' name='submit_partner-denies' value='Abmelden'>Abmelden</button>
                 </form>
             </div>
@@ -266,9 +268,9 @@ $html = "<div class='panel panel-default' style='background-color: white; border
 			<form action='/Customizing/global/include/fpraktikum/submit/fp-signout.php' method='post' class='form-horizontal'>
 				<input type='hidden' name='partner' value='" . $user_login . "'>
 				<input type='hidden' name='semester' value='" . $semester . "'>
-				<input type='hidden' name='token' value='" . $data_registrant['token'] . "' > 
+				<input type='hidden' name='token' value='" . $data_registrant['token'] . "' >
 				<div class='alert alert-success' role='alert'><strong>Schau mal!</strong> Du bist als Partner angemeldet.</div>
-				
+
 				<p>Dies sind die Informationen, die in der Datenbank gespeichert sind:</p>
 				<div class='form-group'>
 					<label class='col-sm-4 col-md-3 col-lg-2 control-label'>Benutzername</label>
@@ -282,43 +284,43 @@ $html = "<div class='panel panel-default' style='background-color: white; border
 						<span class='form-control-static'>" . $data_registrant['graduation'] . "</span>
 					</div>
 				</div>
-				<div class='form-group'>	
+				<div class='form-group'>
 					<label class='col-sm-4 col-md-3 col-lg-2 control-label'>Partner (Benutzername)</label>
 					<div class='col-sm-8 col-md-9 col-lg-10'>
 						<span class='form-control-static'>" . $user['registrant'] . "</span>
 					</div>
 				</div>
-				<div class='form-group'>	
+				<div class='form-group'>
 					<label class='col-sm-4 col-md-3 col-lg-2 control-label'>Datum</label>
 					<div class='col-sm-8 col-md-9 col-lg-10'>
 						<span class='form-control-static'>" . $data_registrant['register_date'] . "</span>
 					</div>
 				</div>
-				<div class='form-group'>	
+				<div class='form-group'>
 					<label class='col-sm-4 col-md-3 col-lg-2 control-label'>1.&nbsp;Semesterhälfte</label>
 					<div class='col-sm-8 col-md-9 col-lg-10'>
 						<span class='form-control-static'>" . $data_registrant['institute1'] . "</span>
 					</div>
 				</div>
-				<div class='form-group'>	
+				<div class='form-group'>
 					<label class='col-sm-4 col-md-3 col-lg-2 control-label'>2.&nbsp;Semesterhälfte</label>
 					<div class='col-sm-8 col-md-9 col-lg-10'>
 						<span class='form-control-static'>" . $data_registrant['institute2'] . "</span>
 					</div>
 				</div>
-				<div class='form-group'>	
+				<div class='form-group'>
 					<label class='col-sm-4 col-md-3 col-lg-2 control-label'>Bemerkungen</label>
 					<div class='col-sm-8 col-md-9 col-lg-10'>
 						<span class='form-control-static'>" . $data['notes'] . "</span>
 					</div>
 				</div>
-				<div class='form-group'>	
+				<div class='form-group'>
 					<label class='col-sm-4 col-md-3 col-lg-2 control-label'></label>
 					<div class='col-sm-8 col-md-9 col-lg-10'>
 						<span class='form-control-static'>Hier kannst du dich wieder <button onclick=confirmAbmeldung() type='submit' class='btn btn-danger' name='submit_partner-denies' value='Abmelden'>Abmelden</button></span>
 					</div>
 				</div>
-				
+
 			</form>
 		</div>
     <script type='text/javascript' src='/home/elearning-www/public_html/elearning/ilias-5.1//Customizing/global/include/fpraktikum/js/fp-abmeldung.js'></script>
@@ -339,3 +341,6 @@ $html = "<div class='panel panel-default' style='background-color: white; border
 //
 //}
 // >>>>>>> b465e2910b30d194080600158f52644e40744274
+
+//error_reporting( E_ALL );
+//ini_set( 'display_errors', 0 );

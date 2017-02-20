@@ -13,9 +13,10 @@ class Mail
      */
     static public function send ( $subject, $body, $to = array( fp_const\MAIL_ADDRESS ) )
     {
+        $headers = "Content-Type: text/plain; charset=UTF-8";
         foreach ( $to as $mail )
         {
-            mail( $mail, $subject, $body );
+            mail( $mail, "[FPraktikum] " . $subject, $body, $headers );
             Logger::log( "Eine Mail wurde an $mail gesendet.", 2 );
         }
     }

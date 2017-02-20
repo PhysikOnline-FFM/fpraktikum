@@ -5,8 +5,8 @@
  * TODO: this is quite messy
  */
 
-//error_reporting( E_ALL );
-//ini_set( 'display_errors', 1 );
+error_reporting( E_ALL );
+ini_set( 'display_errors', 1 );
 
 require '../database/class.FP-Database.php';
 require 'class.exporter.php';
@@ -30,11 +30,11 @@ if ( $_POST["export"] && $_POST["semester"] )
 
     $exporter = new Exporter();
 
-    $data = [];
+    $data = array();
 
     foreach ( $fp_database->getAllRegistrations( $semester ) as $key => $value )
     {
-        $line = [];
+        $line = array();
         $personal = $fp_database->getAddInfos( $value['hrz1'] );
         array_push( $line, $personal['first_name'] . " " . $personal['last_name'] );
         array_push( $line, $personal['matrikel'] );
@@ -49,7 +49,7 @@ if ( $_POST["export"] && $_POST["semester"] )
     }
 
     $exporter->init( $data );
-    $exporter->setHead( [ "Name", "Matrikelnummer", "HRZ", "Partner", "Matrikelnummer", "HRZ", "Studiengang", "Institut1", "Institut2", "Anmeldezeitpunkt", "Bemerkungen" ] );
+    $exporter->setHead( array( "Name", "Matrikelnummer", "HRZ", "Partner", "Matrikelnummer", "HRZ", "Studiengang", "Institut1", "Institut2", "Anmeldezeitpunkt", "Bemerkungen" ) );
 
     if ( $exporter->create_plain_file( $path ) != 0 )
     {
@@ -107,13 +107,13 @@ if ($_POST['delete_dates'])
 
 if ( $_POST['angebot-hinzufügen'] )
 {
-    $data = [
+    $data = array(
         "institute"     => $_POST['institute'],
         "semester"      => $_POST['semester'],
         "graduation"    => $_POST['graduation'],
         "semester_half" => $_POST['semester_half'],
         "slots"         => $_POST['slots']
-    ];
+    );
 
     if ( $data['graduation'] == 'LA' )
     {
@@ -155,12 +155,12 @@ if ( $_POST['angebot-hinzufügen'] )
 if ( $_POST['angebot-löschen'] )
 {
 
-    $data = [
+    $data = array(
         "institute"     => $_POST['institute'],
         "semester"      => $_POST['semester'],
         "graduation"    => $_POST['graduation'],
         "semester_half" => $_POST['semester_half']
-    ];
+    );
 
     if ( $fp_database->rmOffer( $data ) )
     {

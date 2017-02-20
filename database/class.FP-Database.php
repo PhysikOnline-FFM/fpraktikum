@@ -4,7 +4,7 @@
 //ini_set('display_errors', 1);
 
 require_once('class.Database.php');
-require_once("/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/include/class.fp_error.php");
+require_once("/home/elearning-www/public_html/elearning/ilias/Customizing/global/include/fpraktikum/include/class.fp_error.php");
 
 /**
  *
@@ -36,7 +36,7 @@ class FP_Database
 
     public function __construct ()
     {
-        $dbConfig = parse_ini_file( '/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/database/private/db-credentials.php', true ) or die( "Can not read ini-file" );
+        $dbConfig = parse_ini_file( '/home/elearning-www/public_html/elearning/ilias/Customizing/global/include/fpraktikum/database/private/db-credentials.php', true ) or die( "Can not read ini-file" );
 
         $this->configFP = $dbConfig['fpraktikum'];
         $this->configIL = $dbConfig['ilias'];
@@ -78,10 +78,10 @@ class FP_Database
         $stmt_courses = $this->dbFP->prepare(
             "SELECT `institute`, `max_slots`
         FROM `tbl_courses`
-        WHERE `semester`= ? 
-	        && ( `graduation` = ? 
-            OR `graduation` = '' 
-            OR `graduation` IS NULL) 
+        WHERE `semester`= ?
+	        && ( `graduation` = ?
+            OR `graduation` = ''
+            OR `graduation` IS NULL)
           && `semester_half`= ? "
         );
 
@@ -89,15 +89,16 @@ class FP_Database
         $semester_half = 0;
         $stmt_courses->bind_param( "ssi", $semester, $graduation, $semester_half ); // defines the ?'s in the above stmt.
 
+        // TODO: In aggregated query without GROUP BY, expression #1 of SELECT list contains nonaggregated column 'fpraktikum.c.max_slots'; this is incompatible with sql_mode=only_full_group_by'
         $stmt_places_remaining = $this->dbFP->prepare( "
-      SELECT (c.max_slots - COUNT(snumber1)-COUNT(snumber2)) 
+      SELECT (any_value(c.max_slots) - COUNT(snumber1)-COUNT(snumber2))
         FROM tbl_registrations AS r
       JOIN tbl_partners AS p
         ON p.registration_id = r.registration_id
       JOIN tbl_courses AS c
         ON c.course_id = r.course_id1
         OR c.course_id = r.course_id2
-      WHERE c.institute = ? 
+      WHERE c.institute = ?
         AND c.semester = ?
         AND c.graduation = ?
         AND c.semester_half = ?" );
@@ -145,7 +146,7 @@ class FP_Database
 
         $graduation_array = array( "BA", "MA", "MAIT", "LA" );    // TODO: LA = Lehr Amt ?
 
-        $result = [];
+        $result = array();
         /*
         result = [graduation =>
                                institute =>
@@ -156,7 +157,7 @@ class FP_Database
         // loop through graduations
         foreach ( $graduation_array as $key => $graduation )
         {
-            $result[$graduation] = [];
+            $result[$graduation] = array();
 
             // loop through semesterhälfte
             for ( $semester_half = 0; $semester_half <= 1; $semester_half++ )
@@ -251,9 +252,9 @@ class FP_Database
     public function checkUser ( $user_login, $semester )
     {
 
-        $stmt = $this->dbFP->prepare( "SELECT `snumber1`, `snumber2`, `accepted` FROM tbl_partners AS p 
-     JOIN tbl_registrations AS r ON p.registration_id = r.registration_id 
-     JOIN tbl_courses AS c ON (r.course_id1 = c.course_id OR r.course_id2 = c.course_id) 
+        $stmt = $this->dbFP->prepare( "SELECT `snumber1`, `snumber2`, `accepted` FROM tbl_partners AS p
+     JOIN tbl_registrations AS r ON p.registration_id = r.registration_id
+     JOIN tbl_courses AS c ON (r.course_id1 = c.course_id OR r.course_id2 = c.course_id)
      WHERE `c`.`semester` = ? AND (`p`.`snumber1` = ? OR `p`.`snumber2` = ?)" );
 
         $stmt->bind_param( "sss", $semester, $user_login, $user_login );
@@ -402,11 +403,11 @@ class FP_Database
      */
     public function setRegistration ( $data, $partner_hrz, $token )
     {
-        $stmt_registration = $this->dbFP->prepare( "INSERT IGNORE INTO " . $this->configFP['tbl-registration'] . " 
+        $stmt_registration = $this->dbFP->prepare( "INSERT IGNORE INTO " . $this->configFP['tbl-registration'] . "
       VALUES(
-      NULL, 
-      (SELECT `course_id` FROM " . $this->configFP['tbl-courses'] . " WHERE `semester` = ? AND `semester_half` = 0 AND `institute` = ? AND `graduation` = ?), 
-      (SELECT `course_id` FROM " . $this->configFP['tbl-courses'] . " WHERE `semester` = ? AND `semester_half` = 1 AND `institute` = ? AND `graduation` = ?), 
+      NULL,
+      (SELECT `course_id` FROM " . $this->configFP['tbl-courses'] . " WHERE `semester` = ? AND `semester_half` = 0 AND `institute` = ? AND `graduation` = ?),
+      (SELECT `course_id` FROM " . $this->configFP['tbl-courses'] . " WHERE `semester` = ? AND `semester_half` = 1 AND `institute` = ? AND `graduation` = ?),
       NOW())" );
         /**
          * JOIN hier nicht möglich, da tabelle dadurch redundant wird. z.B.:
@@ -445,10 +446,10 @@ class FP_Database
       NULL,
       ?,
       ?,
-      (SELECT `registration_id` FROM tbl_registrations 
-        WHERE `course_id1` = (SELECT `course_id` FROM " . $this->configFP['tbl-courses'] . " WHERE `semester` = ? AND 
+      (SELECT `registration_id` FROM tbl_registrations
+        WHERE `course_id1` = (SELECT `course_id` FROM " . $this->configFP['tbl-courses'] . " WHERE `semester` = ? AND
                                 `semester_half` = 0 AND `institute` = ? AND `graduation` = ?)
-        AND `course_id2` = (SELECT `course_id` FROM " . $this->configFP['tbl-courses'] . " WHERE `semester` = ? AND 
+        AND `course_id2` = (SELECT `course_id` FROM " . $this->configFP['tbl-courses'] . " WHERE `semester` = ? AND
                                 `semester_half` = 1 AND `institute` = ? AND `graduation` = ?)),
       0,?,?)
         " );
@@ -496,8 +497,8 @@ class FP_Database
     public function setPartnerAccepted ( $partner_hrz, $semester )
     {
         $stmt = $this->dbFP->prepare( "UPDATE tbl_partners AS p
-            JOIN tbl_registrations AS r ON p.registration_id = r.registration_id 
-            JOIN tbl_courses AS c ON (r.course_id1 = c.course_id OR r.course_id2 = c.course_id) 
+            JOIN tbl_registrations AS r ON p.registration_id = r.registration_id
+            JOIN tbl_courses AS c ON (r.course_id1 = c.course_id OR r.course_id2 = c.course_id)
             SET p.accepted = 1
             WHERE c.semester = ? AND p.snumber2 = ?" );
 
@@ -526,8 +527,8 @@ class FP_Database
     public function rmPartner ( $partner_hrz, $semester )
     {
         $stmt = $this->dbFP->prepare( "UPDATE tbl_partners AS p
-            JOIN tbl_registrations AS r ON p.registration_id = r.registration_id 
-            JOIN tbl_courses AS c ON (r.course_id1 = c.course_id OR r.course_id2 = c.course_id) 
+            JOIN tbl_registrations AS r ON p.registration_id = r.registration_id
+            JOIN tbl_courses AS c ON (r.course_id1 = c.course_id OR r.course_id2 = c.course_id)
             SET p.accepted = 0, p.snumber2 = NULL
             WHERE c.semester = ? AND p.snumber2 = ?" );
 
@@ -555,16 +556,16 @@ class FP_Database
      */
     public function getRegistration ( $hrz, $semester )
     {
-        $stmt = $this->dbFP->prepare( "SELECT p.snumber2, p.accepted, c.institute, c.graduation, r.register_date,p.notes,p.token 
-      FROM tbl_partners AS p 
-      JOIN tbl_registrations AS r ON p.registration_id = r.registration_id 
-      JOIN tbl_courses AS c ON r.course_id1 = c.course_id OR r.course_id2 = c.course_id 
+        $stmt = $this->dbFP->prepare( "SELECT p.snumber2, p.accepted, c.institute, c.graduation, r.register_date,p.notes,p.token
+      FROM tbl_partners AS p
+      JOIN tbl_registrations AS r ON p.registration_id = r.registration_id
+      JOIN tbl_courses AS c ON r.course_id1 = c.course_id OR r.course_id2 = c.course_id
       WHERE c.semester_half = ? AND p.snumber1 = ? AND c.semester = ?" );
 
         $semester_half = 0;
         $stmt->bind_param( "iss", $semester_half, $hrz, $semester );
 
-        $data = [];
+        $data = array();
 
         $snumber2 = "";
         $isAccepted = 0;
@@ -613,9 +614,9 @@ class FP_Database
     {
         $stmt = $this->dbFP->prepare(
             "DELETE p
-             FROM tbl_partners AS p 
-             JOIN tbl_registrations AS r ON p.registration_id = r.registration_id 
-             JOIN tbl_courses AS c ON r.course_id1 = c.course_id OR r.course_id2 = c.course_id 
+             FROM tbl_partners AS p
+             JOIN tbl_registrations AS r ON p.registration_id = r.registration_id
+             JOIN tbl_courses AS c ON r.course_id1 = c.course_id OR r.course_id2 = c.course_id
              WHERE `p`.`snumber1` = ? AND `c`.`semester` = ?"
         );
 
@@ -642,11 +643,11 @@ class FP_Database
     public function getAllRegistrations ( $semester )
     {
         $stmt = $this->dbFP->prepare(
-            "SELECT p.snumber1, p.snumber2, r.register_date, c1.institute, c1.graduation, c2.institute, p.notes 
-             FROM tbl_partners AS p 
-             JOIN tbl_registrations AS r ON p.registration_id = r.registration_id 
-             JOIN tbl_courses AS c1 ON c1.course_id = r.course_id1 
-             JOIN tbl_courses AS c2 ON c2.course_id = r.course_id2 
+            "SELECT p.snumber1, p.snumber2, r.register_date, c1.institute, c1.graduation, c2.institute, p.notes
+             FROM tbl_partners AS p
+             JOIN tbl_registrations AS r ON p.registration_id = r.registration_id
+             JOIN tbl_courses AS c1 ON c1.course_id = r.course_id1
+             JOIN tbl_courses AS c2 ON c2.course_id = r.course_id2
              WHERE c1.semester = ? AND c2.semester = ?"
         );
 
@@ -667,7 +668,7 @@ class FP_Database
 
         $stmt->bind_result( $hrz1, $hrz2, $date, $institute1, $graduation, $institute2, $notes );
 
-        $data = [];
+        $data = array();
         while ( $stmt->fetch() )
         {
             array_push( $data, array(
@@ -722,8 +723,8 @@ class FP_Database
     public function getOffers ( $semester )
     {
 
-        $stmt = $this->dbFP->prepare( "SELECT `institute`, `semester_half`, `graduation`, `max_slots` 
-      FROM tbl_courses WHERE `semester` = ? 
+        $stmt = $this->dbFP->prepare( "SELECT `institute`, `semester_half`, `graduation`, `max_slots`
+      FROM tbl_courses WHERE `semester` = ?
       ORDER BY `graduation`, `institute`, `semester_half`" );
 
         $stmt->bind_param( "s", $semester );
@@ -740,7 +741,7 @@ class FP_Database
 
         $stmt->bind_result( $institute, $semester_half, $graduation, $max_slots );
 
-        $result = [];
+        $result = array();
         while ( $stmt->fetch() )
         {
             array_push( $result, array(
@@ -770,7 +771,7 @@ class FP_Database
     public function isOffer ( $institute, $semester, $semester_half, $graduation )
     {
         $stmt = $this->dbFP->prepare(
-            "SELECT `course_id` 
+            "SELECT `course_id`
              FROM tbl_courses
              WHERE `institute` = ? AND `semester` = ? AND `semester_half` = ? AND `graduation` = ?"
         );
@@ -796,7 +797,7 @@ class FP_Database
     public function rmOffer ( $data )
     {
         $stmt = $this->dbFP->prepare(
-            "DELETE FROM tbl_courses 
+            "DELETE FROM tbl_courses
             WHERE `institute` = ? AND `semester` = ? AND `semester_half` = ? AND `graduation` = ?"
         );
 
@@ -824,9 +825,9 @@ class FP_Database
     public function get_token ( $registrant, $semester )
     {
         $stmt = $this->dbFP->prepare(
-            "SELECT DISTINCT(token) FROM tbl_partners AS p 
-             JOIN tbl_registrations AS r ON p.registration_id = r.registration_id 
-             JOIN tbl_courses AS c ON (r.course_id1 = c.course_id OR r.course_id2 = c.course_id) 
+            "SELECT DISTINCT(token) FROM tbl_partners AS p
+             JOIN tbl_registrations AS r ON p.registration_id = r.registration_id
+             JOIN tbl_courses AS c ON (r.course_id1 = c.course_id OR r.course_id2 = c.course_id)
              WHERE `c`.`semester` = ?
              AND (snumber1 = ? OR snumber2 = ?)"
         );
@@ -871,18 +872,14 @@ class FP_Database
             throw new FP_Error( "Database Error in '" . __FUNCTION__ . "()': " . $stmt->error );
         }
 
-        $dates =[
-            'startdate' => "",
-            'enddate'   => ""
-        ];
         $stmt->bind_result( $startdate ,$enddate);
 
         $stmt->fetch();
 
-        $dates= [
+        $dates= array(
             'startdate' => $startdate,
-            'enddate'   => $enddate];
-
+            'enddate'   => $enddate
+        );
         $stmt->close();
 
         return $dates;
