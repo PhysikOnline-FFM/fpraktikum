@@ -76,6 +76,11 @@ function showInstitut ( graduation ) {
                 "<label class='col-sm-4 col-md-3 col-lg-2 control-label'>2.&nbsp;Semesterhälfte</label>" +
                 "<div class='col-sm-8 col-md-9 col-lg-4'>" + text_haelfte2 + "</div>" +
                 "</div>";
+
+            if ( graduation == "MA" )
+            {
+                target.innerHTML = "Das ITP können nur Studenten im Studiengang Master \"Physik mit Schwerpunkt Computational Physics\" belegen!" + target.innerHTML;
+            }
         } )
 }
 

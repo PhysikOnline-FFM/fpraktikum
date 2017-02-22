@@ -5,28 +5,28 @@
  * TODO: this is quite messy
  */
 
-error_reporting( E_ALL );
-ini_set( 'display_errors', 1 );
+//error_reporting( E_ALL );
+//ini_set( 'display_errors', 1 );
 
-require '../database/class.FP-Database.php';
-require 'class.exporter.php';
-require '../include/class.helper.php';
+require_once '../database/class.FP-Database.php';
+require_once '../include/class.exporter.php';
+require_once '../include/class.helper.php';
 
 $fp_database = new FP_Database();
+$semester = Helper::get_semester();
 
 /**
  * Exports registrations as a plain text file.
  * See end of file for the "export" button.
+ *
  * @author Lars Gröber
  * @date   22.01.2017
  */
-if ( $_POST["export"] && $_POST["semester"] )
+if ( $_POST["export"] )
 {
-    $semester = $_POST["semester"];
-
-    echo "# This file was automatically exported on " . date( "d.m.o G:i" ) .".\n";
+    echo "# This file was automatically exported on " . date( "d.m.o G:i" ) . ".\n";
     //$path = "/home/elearning-www/public_html/elearning/ilias-5.1/Customizing/global/include/fpraktikum/admin/test.dat";
-    $path = "/tmp/fp_" . str_replace( "/", "", $semester ) ."_anmeldungen.dat";
+    $path = "/tmp/fp_" . str_replace( "/", "", $semester ) . "_anmeldungen.dat";
 
     $exporter = new Exporter();
 
@@ -67,42 +67,34 @@ if ( $_POST["export"] && $_POST["semester"] )
     exit();
 }
 
-?>
-
-    <form action="#" method="post">
-        Semester: <input type="text" name="semester" value="<?=Helper::get_semester() ?>">
-    </form>
-
-<?php
-;
 /*
  * Part to set Dates
  */
-if ($_POST['end_start_date'])
-    {
-        $start_date = strtotime($_POST['start_date']);
-        $end_date = strtotime($_POST['end_date']);
+if ( $_POST['end_start_date'] )
+{
+    $start_date = strtotime( $_POST['start_date'] );
+    $end_date = strtotime( $_POST['end_date'] );
 
-        if (!($start_date<$end_date))
-        {
-            echo " Der Startzeitpunkt muss vor dem Endzeitpunktliegen.";
-            exit();
-        }
-        if($fp_database->setDate($_POST['start_date'], $_POST['end_date'], Helper::get_semester()))
-        {
-            echo "Zeiten erfolgreich gespeichert";
-        }
+    if ( ! ($start_date < $end_date) )
+    {
+        echo " Der Startzeitpunkt muss vor dem Endzeitpunktliegen.";
+        exit();
     }
+    if ( $fp_database->setDate( $_POST['start_date'], $_POST['end_date'], $semester ) )
+    {
+        echo "Zeiten erfolgreich gespeichert";
+    }
+}
 /*
  * Part to delete Dates
  */
-if ($_POST['delete_dates'])
+if ( $_POST['delete_dates'] )
+{
+    if ( $fp_database->rmDates( $semester ) )
     {
-        if ( $fp_database->rmDates( Helper::get_semester()) )
-        {
-            echo "Zeiten erfolgreich gelöscht.";
-        }
+        echo "Zeiten erfolgreich gelöscht.";
     }
+}
 
 
 if ( $_POST['angebot-hinzufügen'] )
@@ -168,143 +160,139 @@ if ( $_POST['angebot-löschen'] )
     }
 }
 
-if ( $_POST['semester'] )
+
+echo "<p>Hier sind die momentanen Angebote:</p>";
+
+$angebote = $fp_database->getOffers( $semester );
+$freePlaces = $fp_database->freePlaces( $semester );
+
+//var_dump($angebote);
+echo "
+<table>
+  <tr>
+    <th>Institut</th>
+    <th>Abschluss</th>
+    <th>Semesterhälfte</th>
+    <th>Max Plätze</th>
+    <th>Freie Plätze</th>
+    <th>Eintrag löschen</th>
+  </tr>";
+
+// listing of all the data
+foreach ( $angebote as $row => $column )
 {
-    $semester = $_POST['semester'];
-
-    echo "<p>Hier sind die momentanen Angebote:</p>";
-
-    $angebote = $fp_database->getOffers( $semester );
-    $freePlaces = $fp_database->freePlaces( $semester );
-
-    //var_dump($angebote);
-    echo "
-    <table>
-      <tr>
-        <th>Institut</th>
-        <th>Abschluss</th>
-        <th>Semesterhälfte</th>
-        <th>Max Plätze</th>
-        <th>Freie Plätze</th>
-        <th>Eintrag löschen</th>
-      </tr>";
-
-    // listing of all the data
-    foreach ( $angebote as $row => $column )
+    echo "<tr><form action='#' method='post'>";
+    foreach ( $column as $name => $entry )
     {
-        echo "<tr><form action='#' method='post'>";
-        foreach ( $column as $name => $entry )
-        {
-            echo "<td><input type='hidden' name='" . $name . "' value='" . $entry . "'>" . $entry . "</td>";
-        }
-        echo "<td>" . $freePlaces[$column['graduation']][$column['institute']][$column['semester_half']] . "</td>";
-        echo "<td><input type='submit' name='angebot-löschen' value='Löschen'></td>";
-        echo "<input type='hidden' name='semester' value='" . $semester . "'>";
-        echo "</form></tr>";
+        echo "<td><input type='hidden' name='" . $name . "' value='" . $entry . "'>" . $entry . "</td>";
     }
-    echo "</table>";
-
-    // form to add a new entry
-    echo "
-    <p>Hier können Sie weitere Angebote hinzufügen (es wird nicht überprüft, ob das Angebot bereits besteht):</p>
-    <p>Für den Studiengang 'Lehramt' wird die Option 'Semesterhälfte' ignoriert und das Angebot immer in beide Semesterhälften geschrieben.</p>
-    <form action='#' method='post'>
-      <input type='hidden' name='semester' value='" . $semester . "'>
-
-      <table>
-        <tr>
-          <th>Institut</th>
-          <th>Semester</th>
-          <th>Abschluss</th>
-          <th>Semesterhälfte</th>
-          <th>Plätze</th>
-        </tr>
-        <tr>
-        <td><input type='text' maxlength='10' name='institute'></td>
-        <td><input type='text' maxlength='7' name='semester' value='" . $semester . "' readonly></td>
-        <td>
-          <select name='graduation'>
-            <option value='BA'>Bachelor</option>
-            <option value='MA'>Master</option>
-            <option value='MAIT'>Master IT</option>
-            <option value='LA'>Lehramt</option>
-            <option value=''>Alle</option>
-          </select>
-        </td>
-        <td>
-          <select name='semester_half'>
-            <option value='0'>1</option>
-            <option value='1'>2</option>
-            <option value='both'>beide</option>
-          </select>
-        </td>
-        <td><input type='number' name='slots'></td>
-        </tr>
-      </table>
-      <br>
-      <input type='submit' name='angebot-hinzufügen'>
-    </form>";
-
-    $dates= $fp_database->getDates("SS17");
-    if(!($dates['startdate'] && $dates['enddate']))
-    {
-
-
-        echo "
-    <p> hier können sie den Zeitraum angeben, in dem die Anmeldung verfügbar ist :</p>
-    <form action='#' method='post'>
-     <table>
-     <tr>
-        <th>Anfangszeit</th>
-        <th>Endzeit</th>
-     </tr>
-     <tr>
-        <td><input type='datetime' name='start_date' placeholder='DD.MM.YYYY HH:MM:SS'></td>
-        <td><input type='datetime' name='end_date' placeholder='DD.MM.YYYY HH:MM:SS'></td>
-     </tr>
-     </table>
-     <input type='submit' name='end_start_date'>
-    </form>";
-    }
-    else
-    {
-        echo "
-            <form action='#' method='post'>
-            <p> Der Anmeldezeitraum für das ". Helper::get_semester() ." ist von ". $dates['startdate'] ." bis ". $dates['enddate'] ."</p>
-            <p><input type='submit' name='delete_dates' value='Anmeldezeiten Löschen' ></p>
-            </form>";
-    }
-        //var_dump($angebote);
-        echo "
-    <p>Im folgenden werden alle aktuellen Anmeldungen angezeigt:</p>
-    <table>
-      <tr>
-        <th>HRZ1</th>
-        <th>HRZ2</th>
-        <th>Abschluss</th>
-        <th>Institut1</th>
-        <th>Institut2</th>
-        <th>Anmeldezeitpunkt</th>
-        <th>Bemerkungen</th>
-      </tr>";
-
-    $registrations = $fp_database->getAllRegistrations( $semester );
-    // listing of all the data
-    foreach ( $registrations as $row => $column )
-    {
-        echo "<tr>";
-        foreach ( $column as $name => $entry )
-        {
-            echo "<td>" . $entry . "</td>";
-        }
-        echo "</tr>";
-    }
-    echo "</table>";
-
-    // add export button
-    echo "<form action='#' method='post'>
-            <input type='submit' name='export' value='Export'>
-            <input hidden name='semester' value='" . $semester . "'>
-          </form>";
+    echo "<td>" . $freePlaces[$column['graduation']][$column['institute']][$column['semester_half']] . "</td>";
+    echo "<td><input type='submit' name='angebot-löschen' value='Löschen'></td>";
+    echo "<input type='hidden' name='semester' value='" . $semester . "'>";
+    echo "</form></tr>";
 }
+echo "</table>";
+
+// form to add a new entry
+echo "
+<p>Hier können Sie weitere Angebote hinzufügen (es wird nicht überprüft, ob das Angebot bereits besteht):</p>
+<p>Für den Studiengang 'Lehramt' wird die Option 'Semesterhälfte' ignoriert und das Angebot immer in beide Semesterhälften geschrieben.</p>
+<form action='#' method='post'>
+  <input type='hidden' name='semester' value='" . $semester . "'>
+
+  <table>
+    <tr>
+      <th>Institut</th>
+      <th>Semester</th>
+      <th>Abschluss</th>
+      <th>Semesterhälfte</th>
+      <th>Plätze</th>
+    </tr>
+    <tr>
+    <td><input type='text' maxlength='10' name='institute'></td>
+    <td><input type='text' maxlength='7' name='semester' value='" . $semester . "' readonly></td>
+    <td>
+      <select name='graduation'>
+        <option value='BA'>Bachelor</option>
+        <option value='MA'>Master</option>
+        <option value='LA'>Lehramt</option>
+        <option value=''>Alle</option>
+      </select>
+    </td>
+    <td>
+      <select name='semester_half'>
+        <option value='0'>1</option>
+        <option value='1'>2</option>
+        <option value='both'>beide</option>
+      </select>
+    </td>
+    <td><input type='number' name='slots'></td>
+    </tr>
+  </table>
+  <br>
+  <input type='submit' name='angebot-hinzufügen'>
+</form>";
+
+$dates = $fp_database->getDates( "SS17" );
+if ( ! ($dates['startdate'] && $dates['enddate']) )
+{
+
+
+    echo "
+<p> hier können sie den Zeitraum angeben, in dem die Anmeldung verfügbar ist :</p>
+<form action='#' method='post'>
+ <table>
+ <tr>
+    <th>Anfangszeit</th>
+    <th>Endzeit</th>
+ </tr>
+ <tr>
+    <td><input type='datetime' name='start_date' placeholder='DD.MM.YYYY HH:MM:SS'></td>
+    <td><input type='datetime' name='end_date' placeholder='DD.MM.YYYY HH:MM:SS'></td>
+ </tr>
+ </table>
+ <input type='submit' name='end_start_date'>
+</form>";
+}
+else
+{
+    echo "
+        <form action='#' method='post'>
+        <p> Der Anmeldezeitraum für das " . Helper::get_semester() . " ist von " . $dates['startdate'] . " bis " . $dates['enddate'] . "</p>
+        <p><input type='submit' name='delete_dates' value='Anmeldezeiten Löschen' ></p>
+        </form>";
+}
+//var_dump($angebote);
+echo "
+<p>Im folgenden werden alle aktuellen Anmeldungen angezeigt:</p>
+<table>
+  <tr>
+    <th>HRZ1</th>
+    <th>HRZ2</th>
+    <th>Abschluss</th>
+    <th>Institut1</th>
+    <th>Institut2</th>
+    <th>Anmeldezeitpunkt</th>
+    <th>Bemerkungen</th>
+  </tr>";
+
+$registrations = $fp_database->getAllRegistrations( $semester );
+// listing of all the data
+foreach ( $registrations as $row => $column )
+{
+    echo "<tr>";
+    foreach ( $column as $name => $entry )
+    {
+        echo "<td>" . $entry . "</td>";
+    }
+    echo "</tr>";
+}
+echo "</table>";
+
+// add export button
+echo "<form action='#' method='post'>
+        <input type='submit' name='export' value='Export'>
+        <input hidden name='semester' value='" . $semester . "'>
+      </form>";
+
 
