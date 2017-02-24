@@ -23,35 +23,47 @@ function showInstitut ( graduation ) {
 
             var data = response[graduation];
 
+            var disabled = "";
+            var free = 0;
+
             // build form
             for ( var institut in data ) {
                 if ( graduation == 'LA' ) {
+                    disabled = (data[institut]['0'] > 0) ? "" : "disabled=''";
+                    free = data[institut]['0'];
                     text_lehramt +=
                         "<div class='radio'>" +
                         "<label>" +
-                        "<input class='fp_institute' type='radio' name='institute_la' value='" + institut + "' id='" + institut + "'>" +
+                        "<input class='fp_institute' type='radio' name='institute_la' " +
+                            "value='" + institut + "' id='" + institut + "' data-free='" + free + "' " + disabled + ">" +
                         "<span style='display:inline-block; min-width:40px'>" + institut + "</span>&nbsp;" +
-                        "<em class='hint text-muted small'>(frei: <span class='" + (data[institut]['0'] > 0 ? 'text-success' : 'text-danger') + "'>" + data[institut]['0'] + "</span>)</em>" +
+                        "<em class='hint text-muted small'>(frei: <span class='" + (free > 0 ? 'text-success' : 'text-danger') + "'>" + free + "</span>)</em>" +
                         "</label>" +
                         "</div>";
                 } else {
                     if ( data[institut]['0'] != undefined ) {
+                        disabled = (data[institut]['0'] > 0) ? "" : "disabled=''";
+                        free = data[institut]['0'];
                         text_haelfte1 +=
                             "<div class='radio'>" +
                             "<label>" +
-                            "<input class='fp_institute' onchange=disableInstitutWahl() type='radio' name='institute1' value='" + institut + "' id='" + institut + "1'>" +
+                            "<input class='fp_institute' onchange=disableInstitutWahl() type='radio' name='institute1' " +
+                                "value='" + institut + "' id='" + institut + "1' data-free='" + free + "' " + disabled + ">" +
                             "<span style='display:inline-block; min-width:40px'>" + institut + "</span>&nbsp;" +
-                            "<em class='hint text-muted small'>(frei: <span class='" + (data[institut]['0'] > 0 ? 'text-success' : 'text-danger') + "'>" + data[institut]['0'] + "</span>)</em>" +
+                            "<em class='hint text-muted small'>(frei: <span class='" + (free > 0 ? 'text-success' : 'text-danger') + "'>" + free + "</span>)</em>" +
                             "</label>" +
                             "</div>";
                     }
                     if ( data[institut]['1'] != undefined ) {
+                        disabled = (data[institut]['1'] > 0) ? "" : "disabled=''";
+                        free = data[institut]['1'];
                         text_haelfte2 +=
                             "<div class='radio'>" +
                             "<label>" +
-                            "<input class='fp_institute' onchange=disableInstitutWahl() type='radio' name='institute2' value='" + institut + "' id='" + institut + "2'>" +
+                            "<input class='fp_institute' onchange=disableInstitutWahl() type='radio' name='institute2' " +
+                                "value='" + institut + "' id='" + institut + "2' data-free='" + free + "' " + disabled + ">" +
                             "<span style='display:inline-block; min-width:40px'>" + institut + "</span>&nbsp;" +
-                            "<em class='hint text-muted small'>(frei: <span class='" + (data[institut]['1'] > 0 ? 'text-success' : 'text-danger') + "'>" + data[institut]['1'] + "</span>)</em>" +
+                            "<em class='hint text-muted small'>(frei: <span class='" + (free > 0 ? 'text-success' : 'text-danger') + "'>" + free + "</span>)</em>" +
                             "</label>" +
                             "</div>";
                     }
@@ -179,6 +191,11 @@ function disableInstitutWahl () {
 
         // why is otherOption.length in the array?
         if ( !element.id ) {
+            continue;
+        }
+
+        if ( element.dataset.free <= 0 )
+        {
             continue;
         }
 

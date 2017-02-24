@@ -395,7 +395,7 @@ if ( Helper::validate_dates($dates['startdate'],$dates['enddate']) )
                         <label for='ba'><input class='radio_graduation' onchange=showInstitut('BA') type='radio' id='ba' name='graduation' value='BA'>Bachelor</label>
                         <label for='ma'><input class='radio_graduation' onchange=showInstitut('MA') type='radio' id='ma' name='graduation' value='MA'>Master</label>
                         <label for='la'><input class='radio_graduation' onchange=showInstitut('LA') type='radio' id='la' name='graduation' value='LA'>Lehramt</label>
-                        <div id='instituts'></div>https://elearning.physik.uni-frankfurt.de/ilias.php?baseClass=ilRepositoryGUI&cmd=frameset&set_mode=tree&ref_id=11790
+                        <div id='instituts'></div>
 					</div>
 				</div>
 				<div class='form-group'>
