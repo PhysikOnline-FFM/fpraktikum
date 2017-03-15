@@ -1,9 +1,6 @@
 ﻿/**
  * script für die Anmeldungsmaske des FPraktikums
  * August 2016
- *
- * TODO: check input, farbige Markierung der freien Plätze, automatische Definiation der Institutwahl
- *       styling
  */
 $(document).ready(function(){$('#info').popover({trigger:"focus", content:'Studiengang Master mit Schwerpunkt Computational Science'});});;
 var semester = 'WS16/17';
@@ -132,6 +129,7 @@ function checkPartner () {
     var hrz = document.getElementById( 'partner-hrz' ).value;
     var name = document.getElementById( 'partner-name' ).value;
     var note_element = document.getElementById( 'partner-correct' );
+    var user = document.getElementById( 'user_login' ).value;
 
     Request( './Customizing/global/include/fpraktikum/fp-ajax-request.php?task=partner&hrz=' + hrz + '&name=' + name + '&semester=' + semester
         , function ( response ) {
@@ -154,6 +152,12 @@ function checkPartner () {
                 default:
                     note = "<div class='alert alert-danger' role='alert'><strong>Vertippt?</strong> Person wurde nicht gefunden.</div>";
                     document.getElementById( 'submitRegister' ).disabled = true;
+            }
+
+            if (hrz == user)
+            {
+                note = "<div class='alert alert-danger' role='alert'><strong>Stop!</strong> Es ist nicht möglich sich selbst als Partner zu wählen.</div>";
+                document.getElementById( 'submitRegister' ).disabled = true;
             }
 
             note_element.innerHTML = note;
@@ -215,14 +219,15 @@ function disableInstitutWahl () {
  * @return {boolean}
  */
 function formValidate () {
-    console.log( "Test" );
     var form = document.forms['registration'];
     var error = [];
-        console.log( form['graduation'] );
+    var check_places = false;
 
+    // check if user chose a graduation
     if ( !form['graduation'].value ) {
         error.push( 'Bitte wähle einen Studiengang aus.' );
     }
+    // check if institutes are checked
     else if ( form['graduation'].value == 'LA' ) {
         if ( ! form['institute_la'].value ) {
             error.push( 'Bitte wähle ein Institut aus.' );
@@ -236,9 +241,27 @@ function formValidate () {
             //error.push( 'Bitte wähle zwei verschiedene Institute.' );
         }
     }
+    check_places = error.length == 0;
     if ( form['check-partner'].checked ) {
+        // check if a partner was chosen
         if ( ! form['partner-hrz'].value || ! form['partner-name'].value ) {
             error.push( 'Bitte trage einen Partner ein.' );
+        }
+        // check if enough places are available
+        if ( check_places )
+        {
+            if ( form['graduation'].value == 'LA' )
+            {
+                if ( document.getElementById( form['institute_la'].value ).dataset.free < 2 ) {
+                    error.push( 'In einem Institut sind nicht ausreichend Plätze vorhanden.' )
+                }
+            }
+            else {
+                if ( document.getElementById( form['institute1'].value + "1" ).dataset.free < 2
+                    || document.getElementById( form['institute2'].value + "2" ).dataset.free < 2 ) {
+                    error.push( 'In einem Institut sind nicht ausreichend Plätze vorhanden.' )
+                }
+            }
         }
     }
 

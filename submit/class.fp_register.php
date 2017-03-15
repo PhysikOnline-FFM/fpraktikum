@@ -5,6 +5,8 @@ require_once("../include/class.fp_error.php");
 require_once("../include/class.mail.php");
 require_once("../include/class.template.php");
 require_once("../include/fp_constants.php");
+require_once("../include/class.fp_error.php");
+require_once("../include/class.helper.php");
 
 /**
  * Class Register. Is used to do all registration processes.
@@ -38,6 +40,12 @@ class Register
     {
         $this->fp_database = new FP_Database();
         $this->tpl = new Template();
+        $dates = $this->fp_database->getDates( Helper::get_semester() );
+        if ( ! Helper::validate_dates( $dates['startdate'], $dates['enddate'] ) )
+        {
+            echo "Die Anmeldung ist nicht freigeschaltet!";
+            //exit();
+        }
     }
 
     /**
@@ -73,7 +81,8 @@ class Register
             {
                 if ( ! $this->is_user_type_of( $this->registrant, 'new' ) )
                 {
-                    array_push( $this->error, "Du bist bereits angemeldet oder wurdest als Partner von jemandem anderen hinzugefügt." );
+                    array_push( $this->error
+                        , "Du bist bereits angemeldet oder wurdest als Partner von jemandem anderen hinzugefügt." );
                 }
 
                 if ( ! $this->check_user( $this->registrant ) )
@@ -86,7 +95,8 @@ class Register
                 {
                     if ( $this->partner == $this->registrant )
                     {
-                        array_push( $this->error, "Sorry, aber du kannst dich <strong>nicht</strong> selber als Partner angeben." );
+                        array_push( $this->error
+                            , "Sorry, aber du kannst dich <strong>nicht</strong> selber als Partner angeben." );
                     }
 
                     if ( ! $this->check_partner() )
@@ -97,7 +107,8 @@ class Register
 
                     if ( ! $this->is_user_type_of( $this->partner, 'new' ) )
                     {
-                        array_push( $this->error, "Dein angebener Partner '" . $this->partner . "' ist bereits angemeldet." );
+                        array_push( $this->error
+                            , "Dein angebener Partner '" . $this->partner . "' ist bereits angemeldet." );
                     }
                 }
 
@@ -161,6 +172,7 @@ class Register
      *
      * @param $partner  string   HRZ number of the partner.
      * @param $semester string  Current semester.
+     * @param $token    string  Security token.
      *
      * @return bool             If process was successful.
      */
@@ -182,7 +194,7 @@ class Register
             {
                 if ( ! $this->check_token( $this->partner, $this->semester, $this->token ) )
                 {
-                    throw new FP_Error( "Securitybreach, your Coumputer is about to be hacked!" );
+                    throw new FP_Error( "Security token mismatch!" );
                 }
                 if ( ! $this->is_user_type_of( $this->partner, 'partner-open' ) )
                 {
@@ -191,7 +203,8 @@ class Register
 
                 if ( ! $this->check_user( $this->partner ) )
                 {
-                    array_push( $this->error, "Wir konnten dich mit '" . $this->partner . "' nicht in unserer Datenbank finden." );
+                    array_push( $this->error
+                        , "Wir konnten dich mit '" . $this->partner . "' nicht in unserer Datenbank finden." );
                 }
             }
 
@@ -229,6 +242,14 @@ class Register
         return true;
     }
 
+    /**
+     * Function handles signouts.
+     * @param $registrant string    Name of the registrant.
+     * @param $semester   string    Current semester.
+     * @param $token      string    Security token.
+     *
+     * @return bool
+     */
     public function signOut ( $registrant, $semester, $token )
     {
         $this->error = array();
@@ -240,16 +261,17 @@ class Register
             $this->token = $token;
             if ( ! $this->check_token( $this->registrant, $this->semester, $this->token ) )
             {
-                throw new FP_Error( "Securitybreach, your Coumputer is about to be hacked!" );
+                throw new FP_Error( "Security token mismatch!" );
             }
 
             if ( ( ! $registrant) || ( ! $semester) )
             {
-                array_push( $this->error, "Deine HRZ Nummer oder das aktuelle Semester konnte nicht richtig übermittelt werden." );
+                array_push( $this->error
+                    , "Deine HRZ Nummer oder das aktuelle Semester konnte nicht richtig übermittelt werden." );
             }
             else
             {
-                if ( $this->is_user_type_of( $this->registrant, false ) )
+                if ( $this->is_user_type_of( $this->registrant, "new" ) )
                 {
                     array_push( $this->error, "Du bist nicht registriert und kannst dich nicht abmelden." );
                 }
@@ -263,6 +285,7 @@ class Register
                 return false;
             }
 
+            $this->partner = $this->get_user_partner( $this->registrant, 'partner' );
             $this->fp_database->rmRegistration( array( 'registrant' => $this->registrant, 'semester' => $this->semester ) );
         }
         catch ( FP_Error $error )
@@ -283,7 +306,7 @@ class Register
 
         Logger::log( $this->registrant . " has signed off.", 2 );
         $this->send_mail_signoff();
-        if ( $this->partner = $this->get_user_partner( $this->registrant, 'partner' ) )
+        if ( $this->partner )
         {
             $this->send_mail_signoff_partner();
         }
@@ -291,6 +314,14 @@ class Register
         return true;
     }
 
+    /**
+     * Function can signout a partner.
+     * @param $partner  string  Name of the partner.
+     * @param $semester string  Current semester.
+     * @param $token    string  Security token.
+     *
+     * @return bool
+     */
     public function partnerDenies ( $partner, $semester, $token )
     {
         try
@@ -306,9 +337,10 @@ class Register
             {
                 if ( ! $this->check_token( $this->partner, $this->semester, $token ) )
                 {
-                    throw new FP_Error( "Securitybreach, your Coumputer is about to be hacked!" );
+                    throw new FP_Error( "Security token mismatch!" );
                 }
-                if ( $this->is_user_type_of( $this->partner, 'new' ) || $this->is_user_type_of( $this->partner, 'registered' ) )
+                if ( ! $this->is_user_type_of( $this->partner, 'partner-open' )
+                  && ! $this->is_user_type_of( $this->partner, 'partner-accepted' ) )
                 {
                     array_push( $this->error, "Du bist bereits angemeldet oder wurdest nicht als Partner hinzugefügt." );
                 }
@@ -375,8 +407,6 @@ class Register
      * @param $data array   The array to check
      *
      * @return bool
-     *
-     * @bug When 'notes' is not filled, this throws an error.
      */
     private function check_array ( $data )
     {
@@ -408,12 +438,17 @@ class Register
 
     /**
      * Function to return the user information array [ type, partner/registrant ].
+     *
+     * @param $user     string  Name of the user (registrant or partner).
+     * @param $key      string  Name of the array key to return.
+     *
      * @return array
      */
     private function get_user_partner ( $user, $key )
     {
-        $user = $this->fp_database->checkUser( $user, $this->semester );
-        return $user[$key];
+        $user_data = $this->fp_database->checkUser( $user, $this->semester );
+
+        return $user_data[$key];
     }
 
     /**
@@ -429,16 +464,23 @@ class Register
         return $this->fp_database->checkUserInfo( $hrz );
     }
 
+    /**
+     * Function checks if the requested partner is valid.
+     * It is not enough to just check the ILIAS-DB, we also need to make sure, that he is not already registered.
+     *
+     * @return bool
+     */
     private function check_partner ()
     {
         $p = $this->fp_database->checkPartner( $this->partner, $this->partner_name, $this->semester );
+
         return $p['type'] == "new";
     }
 
     /**
      * Function checks if there are enough places in both institutes.
      *
-     * @return bool
+     * @return string   "ok" if there are enough places, the institute which is lacking otherwise.
      */
     private function check_free_places ()
     {
@@ -480,7 +522,8 @@ class Register
 
     /**
      * Function sends a mail to a user.
-     * @param $hrz string       The user to send the mail to.
+     *
+     * @param $hrz     string   The user to send the mail to.
      * @param $subject string   The subject line.
      * @param $message string   The body of the email.
      */
@@ -488,7 +531,6 @@ class Register
     {
         if ( $this->send_mail )
         {
-            //echo "<br>" . $hrz . "<br>" . $subject . "<br>" . $message;
             Mail::send( $subject, $message, array( $this->fp_database->getMail( $hrz ) ) );
         }
     }
@@ -513,7 +555,7 @@ class Register
         $tpl->assign( "INSTITUTE1", $this->institute1 );
         $tpl->assign( "INSTITUTE2", $this->institute2 );
         $tpl->assign( "BEMERKUNGEN", $this->notes );
-        $this->send_mail_tpl( $this->registrant, "Anmeldung", $tpl );
+        $this->send_mail_tpl( $this->registrant, "Anmeldungsbestätigung", $tpl );
     }
 
     private function send_mail_partner_accepts ()
@@ -522,7 +564,7 @@ class Register
         // send mail to partner
         $tpl->load( "mail_partner_accepts" );
         $tpl->assign( "REGISTRANT", $this->registrant );
-        $this->send_mail_tpl( $this->partner, "Anmeldung", $tpl );
+        $this->send_mail_tpl( $this->partner, "Anmeldung abgeschlossen", $tpl );
         // send mail to registrant
         $tpl->load( "mail_partner_accepts_registrant" );
         $tpl->assign( "PARTNER", $this->partner );
@@ -535,7 +577,7 @@ class Register
         // send mail to partner
         $tpl->load( "mail_partner_denies" );
         $tpl->assign( "REGISTRANT", $this->registrant );
-        $this->send_mail_tpl( $this->partner, "Abmeldung", $tpl );
+        $this->send_mail_tpl( $this->partner, "Abmeldungsbestätigung", $tpl );
         // send mail to registrant
         $tpl->load( "mail_partner_denies_registrant" );
         $tpl->assign( "PARTNER", $this->partner );
@@ -546,7 +588,7 @@ class Register
     {
         $tpl = new Template();
         $tpl->load( "mail_signoff_registrant" );
-        $this->send_mail_tpl( $this->registrant, "Abmeldung", $tpl );
+        $this->send_mail_tpl( $this->registrant, "Abmeldungsbestätigung", $tpl );
     }
 
     private function send_mail_signoff_partner ()
@@ -566,7 +608,7 @@ class Register
         $tpl->assign( "INSTITUTE1", $this->institute1 );
         $tpl->assign( "INSTITUTE2", $this->institute2 );
         $tpl->assign( "BEMERKUNGEN", $this->notes );
-        $this->send_mail_tpl( $this->partner, "Anmeldung", $tpl );
+        $this->send_mail_tpl( $this->partner, "Anmeldung als Partner", $tpl );
     }
 
     /**
@@ -577,6 +619,14 @@ class Register
         $this->send_mail = $send_mail;
     }
 
+    /**
+     * Function checks security token.
+     * @param $registrant   string  Name of the registrant.
+     * @param $semester     string  Current semester.
+     * @param $post_token   string  Token provided by post parameter.
+     *
+     * @return bool                 If $post_token equals the one in the database.
+     */
     public function check_token ( $registrant, $semester, $post_token )
     {
         return ($this->fp_database->get_token( $registrant, $semester ) == $post_token);

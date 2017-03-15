@@ -1,4 +1,4 @@
-du hast dich angemeldet, dies sind deine Daten:
+Du hast dich angemeldet, dies sind deine Daten:
 
 HRZ: {#HRZ#}
 Semester: {#SEMESTER#}

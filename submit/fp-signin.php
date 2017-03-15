@@ -62,12 +62,13 @@ elseif ( isset( $_POST['submit_partner-accepts'] ) )
 if ( $Register->isErrorBit() )
 {
     echo '<div style="margin-top: 50px" class="container">';
-    echo '<div class="alert alert-danger" role="alert"><strong>Fehler:</strong><ul>';
+    echo '<div class="alert alert-danger" role="alert"><strong>Es ist ein Fehler aufgetreten:</strong><ul>';
     foreach ( $Register->getError() as $key => $text )
     {
         echo '<li>' . $text . '</li>';
     }
     echo '</ul></div>';
+    echo '<p>Falls du Hilfe brauchst, <a href=\'mailto:team@elearning.physik.uni-frankfurt.de\'>schreibe</a> uns</p>';
     echo '</div>';
     include "../include/footer.php";
     exit ();

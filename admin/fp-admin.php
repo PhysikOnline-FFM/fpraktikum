@@ -115,7 +115,6 @@ if ( $_POST['angebot-hinzufügen'] )
     // are all fields filled?
     foreach ( $data as $name => $value )
     {
-
         if ( ! $value && $data[$name] != $data['semester_half'] )
         {
             echo '<h1>Nicht alle Felder wurden ausgefüllt.</h1>';
@@ -186,7 +185,14 @@ foreach ( $angebote as $row => $column )
     {
         echo "<td><input type='hidden' name='" . $name . "' value='" . $entry . "'>" . $entry . "</td>";
     }
-    echo "<td>" . $freePlaces[$column['graduation']][$column['institute']][$column['semester_half']] . "</td>";
+    if ( $column['graduation'] == 'ALL' )
+    {
+        echo "<td>" . $freePlaces['BA'][$column['institute']][$column['semester_half']] . "</td>";
+    }
+    else
+    {
+        echo "<td>" . $freePlaces[$column['graduation']][$column['institute']][$column['semester_half']] . "</td>";
+    }
     echo "<td><input type='submit' name='angebot-löschen' value='Löschen'></td>";
     echo "<input type='hidden' name='semester' value='" . $semester . "'>";
     echo "</form></tr>";
@@ -216,7 +222,7 @@ echo "
         <option value='BA'>Bachelor</option>
         <option value='MA'>Master</option>
         <option value='LA'>Lehramt</option>
-        <option value=''>Alle</option>
+        <option value='ALL'>Alle</option>
       </select>
     </td>
     <td>

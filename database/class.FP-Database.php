@@ -60,7 +60,6 @@ class FP_Database
      *                                        institute =>
      *                                                    semester_half =>
      *                                                                    slots_remaining]
-     *               TODO: Partner is not being counted yet.
      */
     public function freePlaces ( $semester )
     {
@@ -80,8 +79,7 @@ class FP_Database
         FROM `tbl_courses`
         WHERE `semester`= ?
 	        && ( `graduation` = ?
-            OR `graduation` = ''
-            OR `graduation` IS NULL)
+            OR `graduation` = 'ALL')
           && `semester_half`= ? "
         );
 
@@ -89,7 +87,6 @@ class FP_Database
         $semester_half = 0;
         $stmt_courses->bind_param( "ssi", $semester, $graduation, $semester_half ); // defines the ?'s in the above stmt.
 
-        // TODO: In aggregated query without GROUP BY, expression #1 of SELECT list contains nonaggregated column 'fpraktikum.c.max_slots'; this is incompatible with sql_mode=only_full_group_by'
         $stmt_places_remaining = $this->dbFP->prepare( "
       SELECT (any_value(c.max_slots) - COUNT(snumber1)-COUNT(snumber2))
         FROM tbl_registrations AS r
@@ -100,7 +97,7 @@ class FP_Database
         OR c.course_id = r.course_id2
       WHERE c.institute = ?
         AND c.semester = ?
-        AND c.graduation = ?
+        AND (c.graduation = ? OR c.graduation = 'ALL')
         AND c.semester_half = ?" );
 
         $institute = "";
@@ -406,8 +403,8 @@ class FP_Database
         $stmt_registration = $this->dbFP->prepare( "INSERT IGNORE INTO " . $this->configFP['tbl-registration'] . "
       VALUES(
       NULL,
-      (SELECT `course_id` FROM " . $this->configFP['tbl-courses'] . " WHERE `semester` = ? AND `semester_half` = 0 AND `institute` = ? AND `graduation` = ?),
-      (SELECT `course_id` FROM " . $this->configFP['tbl-courses'] . " WHERE `semester` = ? AND `semester_half` = 1 AND `institute` = ? AND `graduation` = ?),
+      (SELECT `course_id` FROM " . $this->configFP['tbl-courses'] . " WHERE `semester` = ? AND `semester_half` = 0 AND `institute` = ? AND (`graduation` = ? OR `graduation` = 'ALL')),
+      (SELECT `course_id` FROM " . $this->configFP['tbl-courses'] . " WHERE `semester` = ? AND `semester_half` = 1 AND `institute` = ? AND (`graduation` = ? OR `graduation` = 'ALL')),
       NOW())" );
         /**
          * JOIN hier nicht möglich, da tabelle dadurch redundant wird. z.B.:
@@ -448,18 +445,21 @@ class FP_Database
       ?,
       (SELECT `registration_id` FROM tbl_registrations
         WHERE `course_id1` = (SELECT `course_id` FROM " . $this->configFP['tbl-courses'] . " WHERE `semester` = ? AND
-                                `semester_half` = 0 AND `institute` = ? AND `graduation` = ?)
+                                `semester_half` = 0 AND `institute` = ? AND (`graduation` = ? OR `graduation` = 'ALL'))
         AND `course_id2` = (SELECT `course_id` FROM " . $this->configFP['tbl-courses'] . " WHERE `semester` = ? AND
-                                `semester_half` = 1 AND `institute` = ? AND `graduation` = ?)),
-      0,?,?)
+                                `semester_half` = 1 AND `institute` = ? AND (`graduation` = ? OR `graduation` = 'ALL')))
+      ,?
+      ,0
+      ,?
+      ,?)
         " );
 
         $stmt_registration->bind_param( "ssssss", $data['semester'], $data['institute1'], $data['graduation'],
             $data['semester'], $data['institute2'], $data['graduation'] );
 
-        $stmt_partners->bind_param( "ssssssssss", $data['registrant'], $partner_hrz, $data['semester'],
+        $stmt_partners->bind_param( "sssssssssss", $data['registrant'], $partner_hrz, $data['semester'],
             $data['institute1'], $data['graduation'], $data['semester'], $data['institute2'], $data['graduation'],
-            $data['notes'], $token );
+            $data['graduation'], $data['notes'], $token );
 
         // if any of both queries fail, throw an error and log everything useful for debugging -> also important
         // to handle support requests
@@ -556,7 +556,7 @@ class FP_Database
      */
     public function getRegistration ( $hrz, $semester )
     {
-        $stmt = $this->dbFP->prepare( "SELECT p.snumber2, p.accepted, c.institute, c.graduation, r.register_date,p.notes,p.token
+        $stmt = $this->dbFP->prepare( "SELECT p.snumber2, p.accepted, c.institute, p.graduation, r.register_date,p.notes,p.token
       FROM tbl_partners AS p
       JOIN tbl_registrations AS r ON p.registration_id = r.registration_id
       JOIN tbl_courses AS c ON r.course_id1 = c.course_id OR r.course_id2 = c.course_id
@@ -643,7 +643,7 @@ class FP_Database
     public function getAllRegistrations ( $semester )
     {
         $stmt = $this->dbFP->prepare(
-            "SELECT p.snumber1, p.snumber2, r.register_date, c1.institute, c1.graduation, c2.institute, p.notes
+            "SELECT p.snumber1, p.snumber2, r.register_date, c1.institute, p.graduation, c2.institute, p.notes
              FROM tbl_partners AS p
              JOIN tbl_registrations AS r ON p.registration_id = r.registration_id
              JOIN tbl_courses AS c1 ON c1.course_id = r.course_id1
@@ -773,7 +773,7 @@ class FP_Database
         $stmt = $this->dbFP->prepare(
             "SELECT `course_id`
              FROM tbl_courses
-             WHERE `institute` = ? AND `semester` = ? AND `semester_half` = ? AND `graduation` = ?"
+             WHERE `institute` = ? AND `semester` = ? AND `semester_half` = ? AND (`graduation` = ? OR `graduation` = 'ALL')"
         );
 
         $stmt->bind_param( "ssis", $institute, $semester, $semester_half, $graduation );
@@ -798,7 +798,7 @@ class FP_Database
     {
         $stmt = $this->dbFP->prepare(
             "DELETE FROM tbl_courses
-            WHERE `institute` = ? AND `semester` = ? AND `semester_half` = ? AND `graduation` = ?"
+            WHERE `institute` = ? AND `semester` = ? AND `semester_half` = ? AND (`graduation` = ? OR `graduation` = 'ALL')"
         );
 
         $stmt->bind_param( "ssis", $data['institute'], $data['semester'], $data['semester_half'], $data['graduation'] );

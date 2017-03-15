@@ -1,6 +1,5 @@
-du wurdest als Partner eingetragen, dies sind die Daten:
+Du wurdest als Partner von {#HRZ#} eingetragen, dies sind die Daten:
 
-HRZ: {#HRZ#}
 Semester: {#SEMESTER#}
 1. Semesterhälfte: {#INSTITUTE1#}
 2. Semesterhälfte: {#INSTITUTE2#}
