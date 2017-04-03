@@ -8,3 +8,5 @@ Partner: {#PARTNER#}
 Bemerkungen: {#BEMERKUNGEN#}
 
 Solltest du einen Partner angegeben haben, informieren wir sie/ihn.
+
+Gemeinsame Vorbesprechung für die Fortgeschritten-Praktika ist am Mittwoch, den 19.04. um 14 Uhr im Physik-Hörsaal _0.111.

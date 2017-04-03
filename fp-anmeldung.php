@@ -29,7 +29,6 @@ $evaluated_dates = Helper::validate_dates( $dates['startdate'], $dates['enddate'
 $admins = array(
     'chgad_admin'
     , 'LarsG_admin'
-    , 's0053274'
 );
 
 $html = "
@@ -64,7 +63,7 @@ if ( $evaluated_dates )
             $html .= "
 			<!--<button  type='button' class='btn btn-default pull-right' data-target='#demo' data-toggle='collapse' >Hilfe nötig?</button>-->
 		<div class='panel-body' id='fprakikum_registration' >
-			<div class='alert alert-danger'>Die Anmeldung ist noch nicht freigeschaltet!</div>
+			<!--<div class='alert alert-danger'>Die Anmeldung ist noch nicht freigeschaltet!</div>-->
 			<form name='registration' action='./Customizing/global/include/fpraktikum/submit/fp-signin.php' method='post' onsubmit='return formValidate()' class='form-horizontal'>
 				<p class=''>Hi " . $user_firstname . ", <br />hier kannst du dich für das Fortgeschrittenen Praktikum im " . $semester . " anmelden.</p>
 				<div id='demo' class='collapse text-info bg-info'></div>
@@ -119,7 +118,7 @@ if ( $evaluated_dates )
                     </div>
                     
                     <div class='col-sm-9 col-md-9 col-lg-10 checkbox' id='choosePartner'>
-                        <p></p><label for='pa'><input class='checkbox_partner' onchange=choosePartner(this) type='checkbox' id='pa' name='check-partner' >Ich möchte eine Partnerin/einen Partner angeben.</label></p>
+                        <p></p><label for='pa'><input class='checkbox_partner' onchange=choosePartner(this) type='checkbox' id='pa' name='check-partner' >Ich möchte zusätzlich eine weitere Person als Partner/Partnerin anmelden.</label></p>
                         <p><div id='partnerForm'></div></p>
                     </div>
                     
@@ -162,6 +161,7 @@ if ( $evaluated_dates )
                 $partner_type = ($data_user['type'] == 'partner-open')
                     ? "(noch nicht bestätigt)" : "(bestätigt)";
             }
+            $partner_type = "";
 
             $html .= "
 		<div class='panel-body' >
@@ -208,17 +208,6 @@ if ( $evaluated_dates )
                 <div class='row'>
                 
                     <div class='col-sm-4 col-md-3 col-lg-2 control-label'>
-                        <p>Datum</p>
-                    </div>
-                    
-                    <div class='col-sm-4 col-md-3 col-lg-2 control-label-left'>
-                        <p><span class='form-control-static'>" . $data['register_date'] . "</span></p>
-                    </div>
-                    
-                </div>
-                <div class='row'>
-                
-                    <div class='col-sm-4 col-md-3 col-lg-2 control-label'>
                         <p>1. Semesterhälfte</p>
                     </div>
                     
@@ -257,7 +246,7 @@ if ( $evaluated_dates )
                     
                     <div class='col-sm-4 col-md-3 col-lg-2 control-label-left'>
                         <p><span class='form-control-static'>Hier kannst du dich wieder 
-                        <button onclick=confirmAbmeldung() type='submit' name='submit_signout' class='btn btn-danger'>
+                        <button type='submit' name='submit_signout' class='btn btn-danger'>
                         Abmelden</button></span></p>
                         <p>Fragen? Schaue im 
                         <a href='https://physikonline.atlassian.net/wiki/pages/viewpage.action?pageId=496165'>
@@ -312,17 +301,6 @@ if ( $evaluated_dates )
                         <p><span class='form-control-static'>" . $data['partner'] . " $partner_type" . "</span></p>
                     </div>
                 
-                </div>
-                <div class='row'>
-                
-                    <div class='col-sm-4 col-md-3 col-lg-2 control-label'>
-                        <p>Datum</p>
-                    </div>
-                    
-                    <div class='col-sm-4 col-md-3 col-lg-2 control-label-left'>
-                        <p><span class='form-control-static'>" . $data['register_date'] . "</span></p>
-                    </div>
-                    
                 </div>
                 <div class='row'>
                 
@@ -462,17 +440,6 @@ if ( $evaluated_dates )
                 <div class='row'>
                 
                     <div class='col-sm-4 col-md-3 col-lg-2 control-label'>
-                        <p>Datum</p>
-                    </div>
-                    
-                    <div class='col-sm-4 col-md-3 col-lg-2 control-label-left'>
-                        <p><span class='form-control-static'>" . $data_registrant['register_date'] . "</span></p>
-                    </div>
-                    
-                </div>
-                <div class='row'>
-                
-                    <div class='col-sm-4 col-md-3 col-lg-2 control-label'>
                         <p>1. Semesterhälfte</p>
                     </div>
                     
@@ -530,15 +497,15 @@ else
 {
     if ( strtotime( date( 'd-m-Y H:i:s' ) ) < strtotime( $dates['startdate'] ) )
     {
-        $html .= "<div class='alert alert-info'>Die Anmeldung ist noch nicht freigeschaltet!<br>Sie beginnt am " . $dates['startdate'] . " Uhr.</div>";
+        $html .= "<div class='alert alert-info' style='margin-top: 20px'>Die Anmeldung ist noch nicht freigeschaltet!<br>Sie beginnt am " . $dates['startdate'] . " Uhr.</div>";
     }
     elseif ( strtotime( date( 'd-m-Y H:i:s' ) ) > strtotime( $dates['enddate'] ) )
     {
-        $html .= "<div class='alert alert-info'>Die Anmeldung ist beendet!</div>";
+        $html .= "<div class='alert alert-info' style='margin-top: 20px'>Die Anmeldung ist beendet!</div>";
     }
     else
     {
-        $html .= "<div class='alert alert-danger'>Etwas ist falsch gelaufen, die Anmeldung scheint nicht freigeschaltet zu sein.</div>";
+        $html .= "<div class='alert alert-danger' style='margin-top: 20px'>Etwas ist falsch gelaufen, die Anmeldung scheint nicht freigeschaltet zu sein.</div>";
     }
 }
 // Necessary to end the registration div

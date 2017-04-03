@@ -26,8 +26,9 @@ function showInstitut ( graduation ) {
             // build form
             for ( var institut in data ) {
                 if ( graduation == 'LA' ) {
-                    disabled = (data[institut]['0'] > 0) ? "" : "disabled=''";
-                    free = data[institut]['0'];
+                    if ( institut == 'IFB' ) continue; // hack because the IFB wants all places for BA+MA
+                    free = Math.min( data[institut]['0'], data[institut]['1'] );
+                    disabled = (free > 0) ? "" : "disabled=''";
                     text_lehramt +=
                         "<div class='radio'>" +
                         "<label>" +
@@ -86,9 +87,14 @@ function showInstitut ( graduation ) {
                 "<div class='col-sm-8 col-md-9 col-lg-4'>" + text_haelfte2 + "</div>" +
                 "</div>";
 
+            if ( graduation == 'BA' || graduation == 'MA' )
+            {
+                target.innerHTML = "<p>Für das Institut IFB ist die Teilnahme an der Wahlpflichtvorlesung Biophysik verpflichtend.</p>" + target.innerHTML;
+            }
+
             if ( graduation == "MA" )
             {
-                target.innerHTML = "Das ITP können nur Studenten im Studiengang Master \"Physik mit Schwerpunkt Computational Physics\" belegen!" + target.innerHTML;
+                target.innerHTML = "<p>Das ITP können nur Studenten im Studiengang Master \"Physik mit Schwerpunkt Computational Physics\" belegen.</p>" + target.innerHTML;
             }
         } )
 }
@@ -222,23 +228,27 @@ function formValidate () {
     var form = document.forms['registration'];
     var error = [];
     var check_places = false;
+    var graduation = "";
 
     // check if user chose a graduation
     if ( !form['graduation'].value ) {
         error.push( 'Bitte wähle einen Studiengang aus.' );
     }
-    // check if institutes are checked
-    else if ( form['graduation'].value == 'LA' ) {
-        if ( ! form['institute_la'].value ) {
-            error.push( 'Bitte wähle ein Institut aus.' );
-        }
-    }
     else {
-        if ( !form['institute1'].value || !form['institute2'].value ) {
-            error.push( 'Bitte wähle zwei Institute aus.' );
+        graduation = form['graduation'].value;
+        // check if institutes are checked
+        if ( graduation == 'LA' ) {
+            if ( ! form['institute_la'].value ) {
+                error.push( 'Bitte wähle ein Institut aus.' );
+            }
         }
-        if ( form['institute1'].value == form['institute2'].value ) {
-            //error.push( 'Bitte wähle zwei verschiedene Institute.' );
+        else {
+            if ( !form['institute1'].value || !form['institute2'].value ) {
+                error.push( 'Bitte wähle zwei Institute aus.' );
+            }
+            if ( form['institute1'].value == form['institute2'].value ) {
+                //error.push( 'Bitte wähle zwei verschiedene Institute.' );
+            }
         }
     }
     check_places = error.length == 0;
@@ -250,7 +260,7 @@ function formValidate () {
         // check if enough places are available
         if ( check_places )
         {
-            if ( form['graduation'].value == 'LA' )
+            if ( graduation == 'LA' )
             {
                 if ( document.getElementById( form['institute_la'].value ).dataset.free < 2 ) {
                     error.push( 'In einem Institut sind nicht ausreichend Plätze vorhanden.' )

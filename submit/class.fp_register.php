@@ -44,7 +44,7 @@ class Register
         if ( ! Helper::validate_dates( $dates['startdate'], $dates['enddate'] ) )
         {
             echo "Die Anmeldung ist nicht freigeschaltet!";
-            //exit();
+            exit();
         }
     }
 
@@ -101,8 +101,8 @@ class Register
 
                     if ( ! $this->check_partner() )
                     {
-                        array_push( $this->error, "Wir konnten deinen Partner mit '$this->partner'' und 
-                        '$this->partner_name'' nicht in unserer Datenbank finden." );
+                        array_push( $this->error, "Wir konnten deinen Partner mit '$this->partner' und 
+                        '$this->partner_name' nicht in unserer Datenbank finden." );
                     }
 
                     if ( ! $this->is_user_type_of( $this->partner, 'new' ) )
@@ -474,7 +474,7 @@ class Register
     {
         $p = $this->fp_database->checkPartner( $this->partner, $this->partner_name, $this->semester );
 
-        return $p['type'] == "new";
+        return $p['type'];
     }
 
     /**

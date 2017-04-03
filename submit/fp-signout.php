@@ -11,8 +11,8 @@ include "../include/header.php";
  * @author Lars Gröber
  */
 
-error_reporting( E_ALL );
-ini_set( 'display_errors', 1 );
+//error_reporting( E_ALL );
+//ini_set( 'display_errors', 1 );
 
 $Register = new Register();
 $fp_database = new FP_Database();

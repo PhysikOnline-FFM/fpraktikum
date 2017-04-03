@@ -145,6 +145,12 @@ if ( $_POST['angebot-hinzufügen'] )
 
 if ( $_POST['angebot-löschen'] )
 {
+    $dates = $fp_database->getDates( Helper::get_semester() );
+    if ( Helper::validate_dates( $dates['startdate'], $dates['enddate'] ) )
+    {
+        echo "Du kannst keine Einträge löschen, wenn die Anmeldung läuft!";
+        exit();
+    }
 
     $data = array(
         "institute"     => $_POST['institute'],

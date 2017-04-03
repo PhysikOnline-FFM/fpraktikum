@@ -678,7 +678,7 @@ class FP_Database
                 'institute1' => $institute1,
                 'institute2' => $institute2,
                 'date'       => $date,
-                'notes'      => $notes
+                'notes'      => "'$notes'"
             ) );
         }
         $stmt->close();

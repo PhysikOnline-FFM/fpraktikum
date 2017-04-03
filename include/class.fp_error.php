@@ -12,7 +12,7 @@ class FP_Error extends Exception
     public function __construct ( $message, $code = 0, Exception $previous = NULL )
     {
         Logger::log( "FP_Error: " . $message );
-        Mail::send( "ERROR", $message );
+        Mail::send( "ERROR", $message, array( "lars@elearning.physik.uni-frankfurt.de" ) );
         parent::__construct( $message, $code, $previous );
     }
 
